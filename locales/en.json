@@ -1,0 +1,63 @@
+{
+  "setup": {
+    "welcome": "=== Meeting Transcriber — Setup ===",
+    "installing_deps": "→ Installing system dependencies (ffmpeg, portaudio, blackhole)...",
+    "reloading_audio": "→ Reloading audio driver...",
+    "creating_venv": "→ Creating Python virtual environment...",
+    "installing_packages": "→ Installing Python packages...",
+    "done": "✅ Setup complete!",
+    "audio_title": "AUDIO CONFIGURATION (do this once)",
+    "audio_step1": "1. Open 'Audio MIDI Setup' (search in Spotlight)",
+    "audio_step2": "2. Click '+' at the bottom left → 'Create Multi-Output Device'",
+    "audio_step3": "3. A new item appears on the left — click on it.\n   On the right, a table appears. Under the 'Use' column, check:\n   ☑ MacBook Pro Speakers (or your headphones)\n   ☑ BlackHole 2ch",
+    "audio_step4": "4. Rename to 'Meeting Output' (optional, double-click the name)",
+    "audio_step5": "5. Go to System Settings → Sound → Output\n   → Select 'Meeting Output'\n   (you will still hear everything normally)",
+    "audio_step6": "6. In Google Meet → ⚙️ Settings → Audio\n   → Speaker: leave as 'System default'\n   (BlackHole will receive the audio automatically)",
+    "how_to_use_title": "HOW TO USE",
+    "how_to_use": "  ./run.sh\n\n  Press ENTER to start recording.\n  Press Ctrl+C to stop and save.\n  The .md file is saved to ~/Documents/Meetings/",
+    "folder_structure_title": "Meeting folder structure:",
+    "folder_structure_options": "  1) One folder per meeting (default): Meetings/20260326_1400_name/\n  2) Grouped by day: Meetings/20260326/1400_name/",
+    "folder_structure_prompt": "Choice [1]: "
+  },
+  "run": {
+    "setup_required": "Setup not complete. Please run ./setup.sh first.",
+    "meeting_lang_title": "Meeting language:",
+    "meeting_lang_options": "  1) English (default)\n  2) Portuguese\n  3) Spanish\n  4) French\n  5) German\n  6) Italian\n  7) Japanese\n  8) Chinese\n  9) Dutch",
+    "meeting_lang_prompt": "Choice [1]: ",
+    "meeting_name_prompt": "Meeting name (optional, press Enter to skip): "
+  },
+  "app": {
+    "loading_model": "Loading Whisper model ({model})...",
+    "model_loaded": "Model loaded!",
+    "devices_title": "Detected audio devices:",
+    "device_mic": "Microphone",
+    "device_system": "System audio",
+    "blackhole_missing": "BlackHole not found — microphone only will be captured",
+    "press_enter": "Press ENTER to start recording...",
+    "recording_since": "Recording since {time} — press Ctrl+C to stop and save",
+    "stopping": "\nStopping transcription...",
+    "saved": "✅ Document saved at: {path}",
+    "no_content": "No content was transcribed.",
+    "doc_title": "Meeting",
+    "doc_info": "Info",
+    "doc_date": "Date",
+    "doc_start": "Start",
+    "doc_end": "End",
+    "doc_duration": "Duration",
+    "doc_participants": "Participants",
+    "doc_participants_label": "Participant",
+    "doc_transcript": "Transcript",
+    "doc_generated": "Auto-generated on {date} at {time}"
+  },
+  "process": {
+    "recent_meetings": "Recent meetings:",
+    "select_meeting": "Select meeting number (Enter for most recent): ",
+    "meeting_not_found": "Meeting folder not found.",
+    "no_transcript": "No transcript found in the selected folder.",
+    "available_agents": "Available agents:",
+    "select_agent": "Select agent [1]: ",
+    "running_agent": "Running agent: {agent}...",
+    "saved": "✅ Output saved to: {path}",
+    "no_agents": "No agents found in agents/ folder."
+  }
+}

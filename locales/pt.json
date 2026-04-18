@@ -1,0 +1,63 @@
+{
+  "setup": {
+    "welcome": "=== Meeting Transcriber — Configuração ===",
+    "installing_deps": "→ Instalando dependências do sistema (ffmpeg, portaudio, blackhole)...",
+    "reloading_audio": "→ Recarregando driver de áudio...",
+    "creating_venv": "→ Criando ambiente virtual Python...",
+    "installing_packages": "→ Instalando pacotes Python...",
+    "done": "✅ Instalação concluída!",
+    "audio_title": "CONFIGURAÇÃO DE ÁUDIO (faça isso uma única vez)",
+    "audio_step1": "1. Abra o 'Configuração de Áudio e MIDI' (busque no Spotlight: 'Audio MIDI Setup')",
+    "audio_step2": "2. Clique em '+' no canto inferior esquerdo → 'Criar Dispositivo de Múltipla Saída'",
+    "audio_step3": "3. Um novo item aparece na lista à esquerda — clique nele.\n   À direita aparece uma tabela. Na coluna 'Usar', marque:\n   ☑ Alto-falantes MacBook Pro (ou seus fones de ouvido)\n   ☑ BlackHole 2ch",
+    "audio_step4": "4. Renomeie para 'Meeting Output' (opcional, clique duplo no nome)",
+    "audio_step5": "5. Vá em Ajustes do Sistema → Som → Saída\n   → Selecione 'Meeting Output'\n   (você continuará ouvindo normalmente)",
+    "audio_step6": "6. No Google Meet → ⚙️ Configurações → Áudio\n   → Alto-falante: deixe em 'Padrão do sistema'\n   (o BlackHole receberá o áudio automaticamente)",
+    "how_to_use_title": "COMO USAR",
+    "how_to_use": "  ./run.sh\n\n  Pressione ENTER para iniciar a gravação.\n  Pressione Ctrl+C para parar e salvar.\n  O arquivo .md é salvo em ~/Documents/Meetings/",
+    "folder_structure_title": "Estrutura de pastas das reuniões:",
+    "folder_structure_options": "  1) Uma pasta por reunião (padrão): Meetings/20260326_1400_nome/\n  2) Agrupado por dia: Meetings/20260326/1400_nome/",
+    "folder_structure_prompt": "Escolha [1]: "
+  },
+  "run": {
+    "setup_required": "Setup não concluído. Por favor, rode ./setup.sh primeiro.",
+    "meeting_lang_title": "Idioma da reunião:",
+    "meeting_lang_options": "  1) Inglês (padrão)\n  2) Português\n  3) Espanhol\n  4) Francês\n  5) Alemão\n  6) Italiano\n  7) Japonês\n  8) Chinês\n  9) Holandês",
+    "meeting_lang_prompt": "Escolha [1]: ",
+    "meeting_name_prompt": "Nome da reunião (opcional, Enter para pular): "
+  },
+  "app": {
+    "loading_model": "Carregando modelo Whisper ({model})...",
+    "model_loaded": "Modelo carregado!",
+    "devices_title": "Dispositivos de áudio detectados:",
+    "device_mic": "Microfone",
+    "device_system": "Áudio do sistema",
+    "blackhole_missing": "BlackHole não encontrado — apenas microfone será capturado",
+    "press_enter": "Pressione ENTER para iniciar a gravação...",
+    "recording_since": "Gravando desde {time} — pressione Ctrl+C para parar e salvar",
+    "stopping": "\nParando transcrição...",
+    "saved": "✅ Documento salvo em: {path}",
+    "no_content": "Nenhum conteúdo foi transcrito.",
+    "doc_title": "Reunião",
+    "doc_info": "Informações",
+    "doc_date": "Data",
+    "doc_start": "Início",
+    "doc_end": "Término",
+    "doc_duration": "Duração",
+    "doc_participants": "Participantes",
+    "doc_participants_label": "Participante",
+    "doc_transcript": "Transcrição",
+    "doc_generated": "Gerado automaticamente em {date} às {time}"
+  },
+  "process": {
+    "recent_meetings": "Reuniões recentes:",
+    "select_meeting": "Selecione o número da reunião (Enter para a mais recente): ",
+    "meeting_not_found": "Pasta da reunião não encontrada.",
+    "no_transcript": "Nenhuma transcrição encontrada na pasta selecionada.",
+    "available_agents": "Agentes disponíveis:",
+    "select_agent": "Selecione o agente [1]: ",
+    "running_agent": "Executando agente: {agent}...",
+    "saved": "✅ Saída salva em: {path}",
+    "no_agents": "Nenhum agente encontrado na pasta agents/."
+  }
+}
