@@ -1,7 +1,7 @@
 {
   "setup": {
     "welcome": "=== Meeting Transcriber — Setup ===",
-    "installing_deps": "→ Installing system dependencies (ffmpeg, portaudio, blackhole)...",
+    "installing_deps": "→ Installing system dependencies...",
     "reloading_audio": "→ Reloading audio driver...",
     "creating_venv": "→ Creating Python virtual environment...",
     "installing_packages": "→ Installing Python packages...",
