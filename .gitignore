@@ -1,0 +1,14 @@
+venv/
+__pycache__/
+*.pyc
+settings.json
+app.log
+.claude
+PLAN.md
+
+# test / source media files
+*.mov
+*.mp4
+*.mp3
+*.wav
+*.pdf
