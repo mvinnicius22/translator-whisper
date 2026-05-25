@@ -4,10 +4,16 @@ set -e
 DIR="$(cd "$(dirname "$0")" && pwd)"
 cd "$DIR"
 
+BOLD=$'\033[1m'
+GREEN=$'\033[0;32m'
+YELLOW=$'\033[0;33m'
+CYAN=$'\033[0;36m'
+RED=$'\033[0;31m'
+NC=$'\033[0m'
+
 # ── Check setup ────────────────────────────────────────────────────────────────
 if [ ! -f "$DIR/settings.json" ] || [ ! -d "$DIR/venv" ]; then
-  echo "Setup not complete. Please run ./setup.sh first."
-  echo "Setup não concluído. Por favor, rode ./setup.sh primeiro."
+  echo "${RED}Setup not complete. Please run ./setup.sh first.${NC}"
   exit 1
 fi
 
@@ -33,26 +39,25 @@ MEETINGS_DIR="$HOME/Documents/Meetings"
 
 # ── Select meeting ─────────────────────────────────────────────────────────────
 echo ""
-echo "$(t process.recent_meetings)"
+echo "${BOLD}${CYAN}$(t process.recent_meetings)${NC}"
 echo ""
 
-# List all meeting folders (handles both flat and daily structures)
 MEETING_FOLDERS=()
 while IFS= read -r line; do
   MEETING_FOLDERS+=("$line")
 done < <(find "$MEETINGS_DIR" -name "transcript.md" -not -path "*/\.*" | sort -r | head -20 | xargs -I{} dirname {})
 
 if [ ${#MEETING_FOLDERS[@]} -eq 0 ]; then
-  echo "$(t process.meeting_not_found)"
+  echo "${RED}$(t process.meeting_not_found)${NC}"
   exit 1
 fi
 
 for i in "${!MEETING_FOLDERS[@]}"; do
-  echo "  $((i+1))) ${MEETING_FOLDERS[$i]##*/}"
+  echo "  ${YELLOW}$((i+1)))${NC} ${MEETING_FOLDERS[$i]##*/}"
 done
 
 echo ""
-echo -n "$(t process.select_meeting)"
+echo -n "${BOLD}$(t process.select_meeting)${NC}"
 read -r meeting_choice
 
 if [ -z "$meeting_choice" ]; then
@@ -64,13 +69,13 @@ fi
 TRANSCRIPT="$MEETING_FOLDER/transcript.md"
 
 if [ ! -f "$TRANSCRIPT" ]; then
-  echo "$(t process.no_transcript)"
+  echo "${RED}$(t process.no_transcript)${NC}"
   exit 1
 fi
 
 # ── Select agent ───────────────────────────────────────────────────────────────
 echo ""
-echo "$(t process.available_agents)"
+echo "${BOLD}${CYAN}$(t process.available_agents)${NC}"
 echo ""
 
 AGENT_FILES=()
@@ -79,17 +84,17 @@ while IFS= read -r line; do
 done < <(ls "$DIR/agents/"*.md 2>/dev/null | sort)
 
 if [ ${#AGENT_FILES[@]} -eq 0 ]; then
-  echo "$(t process.no_agents)"
+  echo "${RED}$(t process.no_agents)${NC}"
   exit 1
 fi
 
 for i in "${!AGENT_FILES[@]}"; do
   AGENT_BASE=$(basename "${AGENT_FILES[$i]}" .md)
-  echo "  $((i+1))) $AGENT_BASE"
+  echo "  ${YELLOW}$((i+1)))${NC} $AGENT_BASE"
 done
 
 echo ""
-echo -n "$(t process.select_agent)"
+echo -n "${BOLD}$(t process.select_agent)${NC}"
 read -r agent_choice
 
 if [ -z "$agent_choice" ]; then
@@ -102,7 +107,7 @@ OUTPUT_FILE="$MEETING_FOLDER/$AGENT_NAME.md"
 
 echo ""
 RUNNING_MSG=$(t process.running_agent)
-echo "${RUNNING_MSG//\{agent\}/$AGENT_NAME}"
+echo "${CYAN}${RUNNING_MSG//\{agent\}/$AGENT_NAME}${NC}"
 echo ""
 
 # ── Run agent ──────────────────────────────────────────────────────────────────
@@ -111,4 +116,4 @@ python -u process.py "$TRANSCRIPT" "$AGENT_FILE" "$OUTPUT_FILE"
 
 echo ""
 SAVED_MSG=$(t process.saved)
-echo "${SAVED_MSG//\{path\}/$OUTPUT_FILE}"
+echo "${GREEN}${SAVED_MSG//\{path\}/$OUTPUT_FILE}${NC}"

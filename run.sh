@@ -4,10 +4,16 @@ set -e
 DIR="$(cd "$(dirname "$0")" && pwd)"
 cd "$DIR"
 
+BOLD=$'\033[1m'
+GREEN=$'\033[0;32m'
+YELLOW=$'\033[0;33m'
+CYAN=$'\033[0;36m'
+RED=$'\033[0;31m'
+NC=$'\033[0m'
+
 # ── Check setup was completed ─────────────────────────────────────────────────
 if [ ! -f "$DIR/settings.json" ] || [ ! -d "$DIR/venv" ]; then
-  echo "Setup not complete. Please run ./setup.sh first."
-  echo "Setup não concluído. Por favor, rode ./setup.sh primeiro."
+  echo "${RED}Setup not complete. Please run ./setup.sh first.${NC}"
   exit 1
 fi
 
@@ -29,12 +35,26 @@ print(d[section][subkey])
 PYEOF
 }
 
+# ── Check meeting mode is installed ──────────────────────────────────────────
+MEETING_INSTALLED=$(python3 - "$DIR/settings.json" <<'PYEOF'
+import json, sys
+d = json.load(open(sys.argv[1]))
+print("yes" if "meeting" in d.get("installed_modes", []) else "no")
+PYEOF
+)
+
+if [ "$MEETING_INSTALLED" != "yes" ]; then
+  echo "${RED}Real-time meeting mode is not installed.${NC}"
+  echo "Run ${BOLD}./setup.sh${NC} and choose 'Add real-time meeting support'."
+  exit 1
+fi
+
 # ── Meeting language selection ─────────────────────────────────────────────────
 echo ""
-echo "$(t run.meeting_lang_title)"
+echo "${BOLD}${CYAN}$(t run.meeting_lang_title)${NC}"
 t run.meeting_lang_options
 echo ""
-echo -n "$(t run.meeting_lang_prompt)"
+echo -n "${BOLD}$(t run.meeting_lang_prompt)${NC}"
 read -r lang_choice
 
 case "$lang_choice" in
@@ -52,7 +72,7 @@ esac
 echo ""
 
 # ── Meeting name ──────────────────────────────────────────────────────────────
-echo -n "$(t run.meeting_name_prompt)"
+echo -n "${BOLD}$(t run.meeting_name_prompt)${NC}"
 read -r meeting_name
 
 # ── Run app ────────────────────────────────────────────────────────────────────

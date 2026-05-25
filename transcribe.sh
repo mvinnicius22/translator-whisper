@@ -4,8 +4,15 @@ set -e
 DIR="$(cd "$(dirname "$0")" && pwd)"
 cd "$DIR"
 
+BOLD=$'\033[1m'
+GREEN=$'\033[0;32m'
+YELLOW=$'\033[0;33m'
+CYAN=$'\033[0;36m'
+RED=$'\033[0;31m'
+NC=$'\033[0m'
+
 if [ ! -f "$DIR/settings.json" ] || [ ! -d "$DIR/venv" ]; then
-  echo "Setup not complete. Please run ./setup.sh first."
+  echo "${RED}Setup not complete. Please run ./setup.sh first.${NC}"
   exit 1
 fi
 
@@ -14,22 +21,22 @@ FILE_PATH="${1:-}"
 
 if [ -z "$FILE_PATH" ]; then
   echo ""
-  echo -n "Path to video/audio file: "
+  echo -n "${BOLD}Path to video/audio file: ${NC}"
   read -r FILE_PATH
 fi
 
 if [ ! -f "$FILE_PATH" ]; then
-  echo "Error: file not found: $FILE_PATH"
+  echo "${RED}Error: file not found: $FILE_PATH${NC}"
   exit 1
 fi
 
 # ── Model selection ────────────────────────────────────────────────────────────
 echo ""
-echo "Select Whisper model:"
-echo "  1) medium  :very good accuracy  | M3 Pro: ~10–18 min for 90 min video"
-echo "  2) large   :best accuracy (v3)  | M3 Pro: ~20–35 min for 90 min video"
+echo "${BOLD}${CYAN}Whisper model:${NC}"
+echo "  ${YELLOW}1)${NC} medium   good accuracy  | M3 Pro: ~10-18 min / 90 min video  ${BOLD}(default)${NC}"
+echo "  ${YELLOW}2)${NC} large    best accuracy  | M3 Pro: ~20-35 min / 90 min video"
 echo ""
-echo -n "Choice [1]: "
+echo -n "${BOLD}Choice [1]: ${NC}"
 read -r model_choice
 
 case "$model_choice" in
@@ -39,17 +46,17 @@ esac
 
 # ── Language ───────────────────────────────────────────────────────────────────
 echo ""
-echo -n "Audio language code [pt]: "
+echo -n "${BOLD}Audio language code [pt]: ${NC}"
 read -r lang_input
 LANG="${lang_input:-pt}"
 
 # ── Output format ─────────────────────────────────────────────────────────────
 echo ""
-echo "Output format:"
-echo "  1) timestamped :each segment prefixed with [MM:SS]:good for navigation  (default)"
-echo "  2) prose       :clean continuous text, no timestamps:good for reading/editing"
+echo "${BOLD}${CYAN}Output format:${NC}"
+echo "  ${YELLOW}1)${NC} timestamped  each segment prefixed with [MM:SS], good for navigation  ${BOLD}(default)${NC}"
+echo "  ${YELLOW}2)${NC} prose        clean continuous text, no timestamps, good for reading"
 echo ""
-echo -n "Choice [1]: "
+echo -n "${BOLD}Choice [1]: ${NC}"
 read -r fmt_choice
 
 case "$fmt_choice" in
@@ -59,7 +66,7 @@ esac
 
 # ── Meeting/video name ─────────────────────────────────────────────────────────
 echo ""
-echo -n "Output folder name (press Enter to use filename): "
+echo -n "${BOLD}Output folder name (press Enter to use filename): ${NC}"
 read -r meeting_name
 
 # ── Run ────────────────────────────────────────────────────────────────────────
