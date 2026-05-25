@@ -17,7 +17,7 @@ if [ ! -f "$DIR/settings.json" ] || [ ! -d "$DIR/venv" ]; then
 fi
 
 # ── File path ──────────────────────────────────────────────────────────────────
-FILE_PATH="${1:-}"
+FILE_PATH="${*:-}"
 
 if [ -z "$FILE_PATH" ]; then
   echo ""
