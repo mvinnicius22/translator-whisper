@@ -1,3 +1,5 @@
-openai-whisper
-sounddevice
-numpy
+openai-whisper==20250625
+torch==2.11.0
+numba==0.64.0
+numpy==2.4.3
+tqdm==4.67.3
