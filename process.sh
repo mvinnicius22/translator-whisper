@@ -37,7 +37,10 @@ echo "$(t process.recent_meetings)"
 echo ""
 
 # List all meeting folders (handles both flat and daily structures)
-mapfile -t MEETING_FOLDERS < <(find "$MEETINGS_DIR" -name "transcript.md" -not -path "*/\.*" | sort -r | head -20 | xargs -I{} dirname {})
+MEETING_FOLDERS=()
+while IFS= read -r line; do
+  MEETING_FOLDERS+=("$line")
+done < <(find "$MEETINGS_DIR" -name "transcript.md" -not -path "*/\.*" | sort -r | head -20 | xargs -I{} dirname {})
 
 if [ ${#MEETING_FOLDERS[@]} -eq 0 ]; then
   echo "$(t process.meeting_not_found)"
@@ -70,7 +73,10 @@ echo ""
 echo "$(t process.available_agents)"
 echo ""
 
-mapfile -t AGENT_FILES < <(ls "$DIR/agents/"*.md 2>/dev/null | sort)
+AGENT_FILES=()
+while IFS= read -r line; do
+  AGENT_FILES+=("$line")
+done < <(ls "$DIR/agents/"*.md 2>/dev/null | sort)
 
 if [ ${#AGENT_FILES[@]} -eq 0 ]; then
   echo "$(t process.no_agents)"
