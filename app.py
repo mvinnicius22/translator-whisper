@@ -381,32 +381,7 @@ class MeetingSession:
         return "\n".join(lines)
 
 
-# ─── Meeting folder helper ──────────────────────────────────────────────────────
-
-def get_meeting_folder(meeting_name: str, session_start: datetime) -> Path:
-    """Build the meeting folder path based on settings."""
-    settings_path = Path(__file__).parent / "settings.json"
-    folder_structure = "flat"
-    if settings_path.exists():
-        with open(settings_path, encoding="utf-8") as f:
-            folder_structure = json.load(f).get("folder_structure", "flat")
-
-    # Sanitize name: lowercase, spaces to hyphens, keep alphanumeric and hyphens only
-    safe_name = re.sub(r"[^a-z0-9\-]", "", meeting_name.lower().replace(" ", "-"))
-    if not safe_name:
-        safe_name = "meeting"
-
-    date_str = session_start.strftime("%Y%m%d")
-    time_str = session_start.strftime("%H%M")
-
-    base = Path.home() / "Documents" / "Meetings"
-
-    if folder_structure == "daily":
-        folder = base / date_str / f"{time_str}_{safe_name}"
-    else:
-        folder = base / f"{date_str}_{time_str}_{safe_name}"
-
-    return folder
+from folders import get_meeting_folder  # noqa: F401 (re-exported for callers)
 
 
 # ─── CLI entry point ────────────────────────────────────────────────────────────
