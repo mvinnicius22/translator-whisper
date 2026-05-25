@@ -4,6 +4,13 @@ set -e
 DIR="$(cd "$(dirname "$0")" && pwd)"
 cd "$DIR"
 
+BOLD=$'\033[1m'
+GREEN=$'\033[0;32m'
+YELLOW=$'\033[0;33m'
+CYAN=$'\033[0;36m'
+RED=$'\033[0;31m'
+NC=$'\033[0m'
+
 # Helper: read a key from a locale JSON file (requires UI_LANG to be set)
 t() {
   python3 - "$DIR/locales/$UI_LANG.json" "$1" <<'PYEOF'
@@ -17,9 +24,9 @@ PYEOF
 
 # Helper: print the audio configuration steps
 print_audio_steps() {
-  echo "══════════════════════════════════════════════════════"
-  echo "  $(t setup.audio_title)"
-  echo "══════════════════════════════════════════════════════"
+  echo "${BOLD}${CYAN}══════════════════════════════════════════════════════${NC}"
+  echo "${BOLD}  $(t setup.audio_title)${NC}"
+  echo "${BOLD}${CYAN}══════════════════════════════════════════════════════${NC}"
   echo ""
   t setup.audio_step1; echo ""
   t setup.audio_step2; echo ""
@@ -27,9 +34,9 @@ print_audio_steps() {
   t setup.audio_step4; echo ""
   t setup.audio_step5; echo ""
   t setup.audio_step6; echo ""
-  echo "══════════════════════════════════════════════════════"
-  echo "  $(t setup.how_to_use_title)"
-  echo "══════════════════════════════════════════════════════"
+  echo "${BOLD}${CYAN}══════════════════════════════════════════════════════${NC}"
+  echo "${BOLD}  $(t setup.how_to_use_title)${NC}"
+  echo "${BOLD}${CYAN}══════════════════════════════════════════════════════${NC}"
   echo ""
   t setup.how_to_use; echo ""
 }
@@ -37,7 +44,6 @@ print_audio_steps() {
 # ── Detect existing installation ──────────────────────────────────────────────
 if [ -d "$DIR/venv" ] && [ -f "$DIR/settings.json" ]; then
 
-  # Read stored preferences
   UI_LANG=$(python3 - "$DIR/settings.json" <<'PYEOF'
 import json, sys
 d = json.load(open(sys.argv[1]))
@@ -58,31 +64,33 @@ PYEOF
   )
 
   echo ""
-  echo "Existing installation detected / Instalação existente detectada"
+  echo "${BOLD}${CYAN}Existing installation detected / Instalação existente detectada${NC}"
   echo ""
 
   if [ "$MEETING_INSTALLED" = "yes" ]; then
-    echo "Both modes are already installed / Ambos os modos já estão instalados"
+    echo "${GREEN}Both modes are already installed / Ambos os modos já estão instalados${NC}"
     echo ""
-    echo "  1) Reinstall from scratch / Reinstalar do zero"
-    echo "  2) Exit / Sair"
-    echo -n "Choice / Escolha [2]: "
+    echo "  ${YELLOW}1)${NC} Reinstall from scratch / Reinstalar do zero"
+    echo "  ${YELLOW}2)${NC} Exit / Sair"
+    echo ""
+    echo -n "${BOLD}Choice / Escolha [2]: ${NC}"
     read -r existing_choice
     case "$existing_choice" in
-      1) : ;;  # fall through to full install below
+      1) : ;;
       *) echo "Nothing changed."; exit 0 ;;
     esac
   else
-    echo "File transcription is installed / Transcrição de arquivo está instalada"
+    echo "${CYAN}File transcription is installed / Transcrição de arquivo está instalada${NC}"
     echo ""
-    echo "  1) Add real-time meeting support / Adicionar suporte a reunião em tempo real"
-    echo "  2) Reinstall from scratch / Reinstalar do zero"
-    echo "  3) Exit / Sair"
-    echo -n "Choice / Escolha [1]: "
+    echo "  ${YELLOW}1)${NC} Add real-time meeting support / Adicionar suporte a reunião em tempo real"
+    echo "  ${YELLOW}2)${NC} Reinstall from scratch / Reinstalar do zero"
+    echo "  ${YELLOW}3)${NC} Exit / Sair"
+    echo ""
+    echo -n "${BOLD}Choice / Escolha [1]: ${NC}"
     read -r existing_choice
 
     case "$existing_choice" in
-      2) : ;;  # fall through to full install below
+      2) : ;;
       3) echo "Nothing changed."; exit 0 ;;
       *)
         # ── Add meeting support only ───────────────────────────────────────────
@@ -99,7 +107,6 @@ PYEOF
         pip install --upgrade pip --quiet
         pip install -r "$DIR/requirements-meeting.txt" --quiet
 
-        # Update installed_modes in settings.json
         python3 - "$DIR/settings.json" <<'PYEOF'
 import json, sys
 path = sys.argv[1]
@@ -113,7 +120,7 @@ with open(path, "w") as f:
 PYEOF
 
         echo ""
-        echo "$(t setup.done)"
+        echo "${GREEN}$(t setup.done)${NC}"
         echo ""
         print_audio_steps
         exit 0
@@ -128,10 +135,11 @@ fi
 
 # ── Language selection ────────────────────────────────────────────────────────
 echo ""
-echo "Choose interface language / Escolha o idioma da interface:"
-echo "  1) English (default)"
-echo "  2) Português"
-echo -n "Choice / Escolha [1]: "
+echo "${BOLD}${CYAN}Choose interface language / Escolha o idioma da interface:${NC}"
+echo "  ${YELLOW}1)${NC} English (default)"
+echo "  ${YELLOW}2)${NC} Português"
+echo ""
+echo -n "${BOLD}Choice / Escolha [1]: ${NC}"
 read -r lang_choice
 
 case "$lang_choice" in
@@ -140,27 +148,30 @@ case "$lang_choice" in
 esac
 
 echo ""
-echo "$(t setup.welcome)"
+echo "${BOLD}${CYAN}$(t setup.welcome)${NC}"
 echo ""
 
 # ── Use case selection ────────────────────────────────────────────────────────
-echo "What do you need? / O que você precisa?"
-echo "  1) Transcribe a video/audio file (default) / Transcrever um arquivo de vídeo/áudio"
-echo "  2) Real-time meeting transcription / Transcrição de reunião em tempo real"
-echo -n "Choice / Escolha [1]: "
+echo "${BOLD}What do you need? / O que você precisa?${NC}"
+echo "  ${YELLOW}1)${NC} Transcribe a video/audio file / Transcrever arquivo de vídeo/áudio  ${BOLD}(default)${NC}"
+echo "  ${YELLOW}2)${NC} Real-time meeting transcription / Transcrição de reunião em tempo real"
+echo "  ${YELLOW}3)${NC} Both / Ambos"
+echo ""
+echo -n "${BOLD}Choice / Escolha [1]: ${NC}"
 read -r use_case_choice
 
 case "$use_case_choice" in
   2) USE_CASE="meeting" ;;
+  3) USE_CASE="both" ;;
   *) USE_CASE="file" ;;
 esac
 
 # ── Folder structure selection ────────────────────────────────────────────────
 echo ""
-echo "$(t setup.folder_structure_title)"
+echo "${BOLD}${CYAN}$(t setup.folder_structure_title)${NC}"
 t setup.folder_structure_options
 echo ""
-echo -n "$(t setup.folder_structure_prompt)"
+echo -n "${BOLD}$(t setup.folder_structure_prompt)${NC}"
 read -r folder_choice
 
 case "$folder_choice" in
@@ -186,8 +197,8 @@ done
 
 if [ -z "$PYTHON" ]; then
   echo ""
-  echo "ERROR: Python 3.11 or newer is required but was not found."
-  echo "ERRO: Python 3.11 ou superior é necessário mas não foi encontrado."
+  echo "${RED}ERROR: Python 3.11 or newer is required but was not found.${NC}"
+  echo "${RED}ERRO: Python 3.11 ou superior é necessário mas não foi encontrado.${NC}"
   echo ""
   echo "Install with Homebrew: brew install python@3.12"
   echo "Instale com Homebrew:  brew install python@3.12"
@@ -202,9 +213,12 @@ fi
 
 # ── System deps ───────────────────────────────────────────────────────────────
 echo "$(t setup.installing_deps)"
-brew install ffmpeg
 
-if [ "$USE_CASE" = "meeting" ]; then
+if [ "$USE_CASE" = "file" ] || [ "$USE_CASE" = "both" ]; then
+  brew install ffmpeg
+fi
+
+if [ "$USE_CASE" = "meeting" ] || [ "$USE_CASE" = "both" ]; then
   brew install portaudio blackhole-2ch
   echo "$(t setup.reloading_audio)"
   sudo killall coreaudiod || true
@@ -219,17 +233,19 @@ echo "$(t setup.installing_packages)"
 pip install --upgrade pip --quiet
 pip install -r requirements.txt --quiet
 
-if [ "$USE_CASE" = "meeting" ]; then
+if [ "$USE_CASE" = "meeting" ] || [ "$USE_CASE" = "both" ]; then
   pip install -r requirements-meeting.txt --quiet
 fi
 
 # ── Save settings.json ────────────────────────────────────────────────────────
 python3 - "$UI_LANG" "$DIR/settings.json" "$FOLDER_STRUCTURE" "$USE_CASE" <<'PYEOF'
 import json, sys
+use_case = sys.argv[4]
+modes = ["file", "meeting"] if use_case == "both" else [use_case]
 settings = {
     "ui_language": sys.argv[1],
     "folder_structure": sys.argv[3],
-    "installed_modes": [sys.argv[4]],
+    "installed_modes": modes,
     "setup_complete": True,
 }
 with open(sys.argv[2], "w") as f:
@@ -237,18 +253,22 @@ with open(sys.argv[2], "w") as f:
 PYEOF
 
 echo ""
-echo "$(t setup.done)"
+echo "${GREEN}$(t setup.done)${NC}"
 echo ""
 
 if [ "$USE_CASE" = "file" ]; then
   echo "To transcribe a file, run:"
-  echo "  ./transcribe.sh <path/to/file.mp4>"
+  echo "  ${BOLD}./transcribe.sh <path/to/file.mp4>${NC}"
   echo ""
   echo "Para transcrever um arquivo, execute:"
-  echo "  ./transcribe.sh <caminho/para/arquivo.mp4>"
+  echo "  ${BOLD}./transcribe.sh <caminho/para/arquivo.mp4>${NC}"
   echo ""
   echo "To add real-time meeting support later, run ./setup.sh again."
   echo "Para adicionar suporte a reunião depois, rode ./setup.sh novamente."
+elif [ "$USE_CASE" = "both" ]; then
+  echo "To transcribe a file: ${BOLD}./transcribe.sh${NC}"
+  echo ""
+  print_audio_steps
 else
   print_audio_steps
 fi
