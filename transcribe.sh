@@ -33,15 +33,15 @@ fi
 # ── Model selection ────────────────────────────────────────────────────────────
 echo ""
 echo "${BOLD}${CYAN}Whisper model:${NC}"
-echo "  ${YELLOW}1)${NC} medium   good accuracy  | M3 Pro: ~10-18 min / 90 min video  ${BOLD}(default)${NC}"
-echo "  ${YELLOW}2)${NC} large    best accuracy  | M3 Pro: ~20-35 min / 90 min video"
+echo "  ${YELLOW}1)${NC} large-v3   best accuracy  | M3 Pro: ~20-35 min / 90 min video  ${BOLD}(default)${NC}"
+echo "  ${YELLOW}2)${NC} medium     good accuracy  | M3 Pro: ~10-18 min / 90 min video"
 echo ""
 echo -n "${BOLD}Choice [1]: ${NC}"
 read -r model_choice
 
 case "$model_choice" in
-  2) MODEL="large" ;;
-  *) MODEL="medium" ;;
+  2) MODEL="medium" ;;
+  *) MODEL="large-v3" ;;
 esac
 
 # ── Language ───────────────────────────────────────────────────────────────────
@@ -64,6 +64,28 @@ case "$fmt_choice" in
   *) FORMAT="timestamped" ;;
 esac
 
+# ── Speaker detection ─────────────────────────────────────────────────────────
+DIARIZE_FLAG=""
+DIARIZE_INSTALLED=$(python3 - "$DIR/settings.json" 2>/dev/null <<'PYEOF' || echo "no"
+import json, sys
+d = json.load(open(sys.argv[1]))
+print("yes" if "diarize" in d.get("installed_modes", []) else "no")
+PYEOF
+)
+
+if [ "$DIARIZE_INSTALLED" = "yes" ]; then
+  echo ""
+  echo "${BOLD}${CYAN}Speaker detection:${NC}"
+  echo "  ${YELLOW}1)${NC} disabled  ${BOLD}(default)${NC}"
+  echo "  ${YELLOW}2)${NC} enabled   labels each segment by speaker (adds processing time)"
+  echo ""
+  echo -n "${BOLD}Choice [1]: ${NC}"
+  read -r diarize_choice
+  if [ "$diarize_choice" = "2" ]; then
+    DIARIZE_FLAG="--diarize"
+  fi
+fi
+
 # ── Meeting/video name ─────────────────────────────────────────────────────────
 echo ""
 echo -n "${BOLD}Output folder name (press Enter to use filename): ${NC}"
@@ -77,4 +99,5 @@ python -u transcribe_file.py \
   --model "$MODEL" \
   --lang "$LANG" \
   --format "$FORMAT" \
-  --meeting-name "$meeting_name"
+  --meeting-name "$meeting_name" \
+  $DIARIZE_FLAG
