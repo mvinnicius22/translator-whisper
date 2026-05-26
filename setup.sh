@@ -41,6 +41,46 @@ print_audio_steps() {
   t setup.how_to_use; echo ""
 }
 
+# Helper: install the speaker diarization add-on
+install_diarize() {
+  echo ""
+  echo "${CYAN}Installing speaker diarization add-on...${NC}"
+  source "$DIR/venv/bin/activate"
+  pip install --upgrade pip --quiet
+  pip install -r "$DIR/requirements-diarize.txt" --quiet
+
+  echo ""
+  echo "A HuggingFace token is required (pyannote uses a gated model)."
+  echo "Steps:"
+  echo "  1) Create account at https://huggingface.co"
+  echo "  2) Accept terms at:"
+  echo "       https://huggingface.co/pyannote/speaker-diarization-3.1"
+  echo "       https://huggingface.co/pyannote/segmentation-3.0"
+  echo "  3) Get your token at https://huggingface.co/settings/tokens"
+  echo ""
+  echo -n "${BOLD}Paste your HuggingFace token: ${NC}"
+  read -r hf_token
+  echo "$hf_token" > "$DIR/.hf_token"
+  chmod 600 "$DIR/.hf_token"
+  echo "Token saved to .hf_token (gitignored)."
+
+  python3 - "$DIR/settings.json" <<'PYEOF'
+import json, sys
+path = sys.argv[1]
+d = json.load(open(path))
+modes = d.get("installed_modes", [])
+if "diarize" not in modes:
+    modes.append("diarize")
+d["installed_modes"] = modes
+with open(path, "w") as f:
+    json.dump(d, f, indent=2)
+PYEOF
+
+  echo ""
+  echo "${GREEN}Speaker diarization installed.${NC}"
+  echo "Use speaker detection in ./transcribe.sh or 'High accuracy' in ./run.sh."
+}
+
 # ── Detect existing installation ──────────────────────────────────────────────
 if [ -d "$DIR/venv" ] && [ -f "$DIR/settings.json" ]; then
 
@@ -50,16 +90,16 @@ d = json.load(open(sys.argv[1]))
 print(d.get("ui_language", "en"))
 PYEOF
   )
-  FOLDER_STRUCTURE=$(python3 - "$DIR/settings.json" <<'PYEOF'
-import json, sys
-d = json.load(open(sys.argv[1]))
-print(d.get("folder_structure", "flat"))
-PYEOF
-  )
   MEETING_INSTALLED=$(python3 - "$DIR/settings.json" <<'PYEOF'
 import json, sys
 d = json.load(open(sys.argv[1]))
 print("yes" if "meeting" in d.get("installed_modes", []) else "no")
+PYEOF
+  )
+  DIARIZE_INSTALLED=$(python3 - "$DIR/settings.json" <<'PYEOF'
+import json, sys
+d = json.load(open(sys.argv[1]))
+print("yes" if "diarize" in d.get("installed_modes", []) else "no")
 PYEOF
   )
 
@@ -67,47 +107,51 @@ PYEOF
   echo "${BOLD}${CYAN}Existing installation detected / Instalação existente detectada${NC}"
   echo ""
 
-  if [ "$MEETING_INSTALLED" = "yes" ]; then
-    echo "${GREEN}Both modes are already installed / Ambos os modos já estão instalados${NC}"
-    echo ""
-    echo "  ${YELLOW}1)${NC} Reinstall from scratch / Reinstalar do zero"
-    echo "  ${YELLOW}2)${NC} Exit / Sair"
-    echo ""
-    echo -n "${BOLD}Choice / Escolha [2]: ${NC}"
-    read -r existing_choice
-    case "$existing_choice" in
-      1) : ;;
-      *) echo "Nothing changed."; exit 0 ;;
-    esac
-  else
-    echo "${CYAN}File transcription is installed / Transcrição de arquivo está instalada${NC}"
-    echo ""
-    echo "  ${YELLOW}1)${NC} Add real-time meeting support / Adicionar suporte a reunião em tempo real"
-    echo "  ${YELLOW}2)${NC} Reinstall from scratch / Reinstalar do zero"
-    echo "  ${YELLOW}3)${NC} Exit / Sair"
-    echo ""
-    echo -n "${BOLD}Choice / Escolha [1]: ${NC}"
-    read -r existing_choice
+  # Build menu dynamically based on what is not yet installed
+  OPT_NUM=1
+  OPT_ADD_MEETING=""
+  OPT_ADD_DIARIZE=""
 
-    case "$existing_choice" in
-      2) : ;;
-      3) echo "Nothing changed."; exit 0 ;;
-      *)
-        # ── Add meeting support only ───────────────────────────────────────────
-        echo ""
-        if ! command -v brew &>/dev/null; then
-          echo "Installing Homebrew / Instalando Homebrew..."
-          /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-        fi
-        brew install portaudio blackhole-2ch
-        echo "$(t setup.reloading_audio)"
-        sudo killall coreaudiod || true
+  if [ "$MEETING_INSTALLED" != "yes" ]; then
+    OPT_ADD_MEETING=$OPT_NUM
+    echo "  ${YELLOW}${OPT_NUM})${NC} Add real-time meeting support / Adicionar suporte a reunião"
+    OPT_NUM=$((OPT_NUM + 1))
+  fi
 
-        source "$DIR/venv/bin/activate"
-        pip install --upgrade pip --quiet
-        pip install -r "$DIR/requirements-meeting.txt" --quiet
+  if [ "$DIARIZE_INSTALLED" != "yes" ]; then
+    OPT_ADD_DIARIZE=$OPT_NUM
+    echo "  ${YELLOW}${OPT_NUM})${NC} Add speaker diarization / Adicionar detecção de falantes"
+    OPT_NUM=$((OPT_NUM + 1))
+  fi
 
-        python3 - "$DIR/settings.json" <<'PYEOF'
+  OPT_REINSTALL=$OPT_NUM
+  echo "  ${YELLOW}${OPT_NUM})${NC} Reinstall from scratch / Reinstalar do zero"
+  OPT_NUM=$((OPT_NUM + 1))
+
+  OPT_EXIT=$OPT_NUM
+  echo "  ${YELLOW}${OPT_NUM})${NC} Exit / Sair"
+
+  echo ""
+  echo -n "${BOLD}Choice / Escolha [$OPT_EXIT]: ${NC}"
+  read -r existing_choice
+  [ -z "$existing_choice" ] && existing_choice=$OPT_EXIT
+
+  if [ -n "$OPT_ADD_MEETING" ] && [ "$existing_choice" = "$OPT_ADD_MEETING" ]; then
+    # ── Add meeting support only ─────────────────────────────────────────────
+    echo ""
+    if ! command -v brew &>/dev/null; then
+      echo "Installing Homebrew / Instalando Homebrew..."
+      /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+    fi
+    brew install portaudio blackhole-2ch
+    echo "$(t setup.reloading_audio)"
+    sudo killall coreaudiod || true
+
+    source "$DIR/venv/bin/activate"
+    pip install --upgrade pip --quiet
+    pip install -r "$DIR/requirements-meeting.txt" --quiet
+
+    python3 - "$DIR/settings.json" <<'PYEOF'
 import json, sys
 path = sys.argv[1]
 d = json.load(open(path))
@@ -119,13 +163,21 @@ with open(path, "w") as f:
     json.dump(d, f, indent=2)
 PYEOF
 
-        echo ""
-        echo "${GREEN}$(t setup.done)${NC}"
-        echo ""
-        print_audio_steps
-        exit 0
-        ;;
-    esac
+    echo ""
+    echo "${GREEN}$(t setup.done)${NC}"
+    echo ""
+    print_audio_steps
+    exit 0
+
+  elif [ -n "$OPT_ADD_DIARIZE" ] && [ "$existing_choice" = "$OPT_ADD_DIARIZE" ]; then
+    install_diarize
+    exit 0
+
+  elif [ "$existing_choice" = "$OPT_REINSTALL" ]; then
+    : # fall through to fresh install below
+
+  else
+    echo "Nothing changed."; exit 0
   fi
 fi
 
@@ -263,8 +315,8 @@ if [ "$USE_CASE" = "file" ]; then
   echo "Para transcrever um arquivo, execute:"
   echo "  ${BOLD}./transcribe.sh <caminho/para/arquivo.mp4>${NC}"
   echo ""
-  echo "To add real-time meeting support later, run ./setup.sh again."
-  echo "Para adicionar suporte a reunião depois, rode ./setup.sh novamente."
+  echo "To add real-time meeting support or speaker diarization later, run ./setup.sh again."
+  echo "Para adicionar suporte a reunião ou diarização depois, rode ./setup.sh novamente."
 elif [ "$USE_CASE" = "both" ]; then
   echo "To transcribe a file: ${BOLD}./transcribe.sh${NC}"
   echo ""
