@@ -22,9 +22,20 @@ The setup asks what you need and installs only the relevant dependencies:
 |---|---|---|
 | File transcription | `ffmpeg` | `openai-whisper`, `torch`, `numba`, `numpy`, `tqdm` |
 | Real-time meeting | + `portaudio`, `BlackHole 2ch` | + `sounddevice` |
+| Speaker diarization | (none extra) | + `pyannote.audio` |
 
-**Upgrading later:** if you installed file-only mode and later want real-time meeting
-transcription, run `./setup.sh` again and choose "Add real-time meeting support".
+**Upgrading later:** run `./setup.sh` again to add modes you did not install initially.
+Setup detects what is already installed and shows only the relevant upgrade options.
+
+### Speaker diarization add-on
+
+Speaker diarization uses [pyannote.audio](https://github.com/pyannote/pyannote-audio) and
+requires a free HuggingFace account:
+
+1. Accept the model terms at [pyannote/speaker-diarization-3.1](https://huggingface.co/pyannote/speaker-diarization-3.1)
+2. Create a HuggingFace token with **read** access at `https://huggingface.co/settings/tokens`
+3. Store it in `.hf_token` in the project root (gitignored, chmod 600), or set the `HF_TOKEN`
+   environment variable
 
 ## How it works
 
@@ -49,12 +60,16 @@ transcription, run `./setup.sh` again and choose "Add real-time meeting support"
 │ transcribe  │     │  BlackHole audio │
 │ _file.py    │     │      │           │
 │  Whisper    │     │      v           │
-│  (local)    │     │  Whisper         │
-│      │      │     │  (local)         │
-│      v      │     │      │           │
-│ transcript  │     │      v           │
-│ .md saved   │     │  transcript.md   │
-└──────┬──────┘     └───────┬──────────┘
+│  + optional │     │  Standard mode:  │
+│  pyannote   │     │   live labels    │
+│  diarize    │     │  Post mode:      │
+│      │      │     │   record, then   │
+│      v      │     │   Whisper +      │
+│ transcript  │     │   pyannote after │
+│ .md saved   │     │      │           │
+└──────┬──────┘     │      v           │
+       │            │  transcript.md   │
+       │            └───────┬──────────┘
        │                    │
        └────────┬───────────┘
                 │
@@ -108,6 +123,7 @@ Choose the structure during `./setup.sh`. You can change it by editing `settings
 | `run.sh` | Entry point for real-time meeting transcription |
 | `process.sh` | Entry point for post-processing a saved transcript with an agent |
 | `transcribe_file.py` | Core file transcription logic (Whisper, progress bar, markdown output) |
+| `diarize.py` | Speaker diarization logic (pyannote.audio, channel-aware alignment) |
 | `app.py` | Core real-time transcription logic (audio capture, VAD, diarization) |
 | `process.py` | Runs a selected agent prompt via `claude -p` and saves the output |
 | `format_transcript.py` | Optional prose formatter: strips timestamps, polishes text via Claude |
@@ -126,9 +142,10 @@ Or run without arguments to be prompted:
 ```
 
 You will be asked:
-- **Model**: `medium` (~1.5 GB download on first use) or `large` (~3 GB, best accuracy)
+- **Model**: `large-v3` (best accuracy, default) or `medium` (faster)
 - **Language**: audio language code, e.g. `pt`, `en`, `es`
-- **Format**: `timestamped` or `prose` (see below)
+- **Format**: `timestamped` (default) or `prose`
+- **Speaker detection**: enabled or disabled (shown only if the diarization add-on is installed)
 - **Output folder name**: defaults to the filename
 
 ### Output formats
@@ -136,19 +153,32 @@ You will be asked:
 | Format | Description | Best for |
 |---|---|---|
 | `timestamped` (default) | Each Whisper segment on its own line, prefixed with `[MM:SS]` | Navigation, reference, post-editing |
-| `prose` | All text joined into continuous paragraphs, no timestamps | Reading, sharing, copy-paste |
+| `prose` | Text grouped into labeled speaker blocks, no timestamps | Reading, sharing, copy-paste |
 
-**Note:** file transcription does not identify who is speaking. All audio becomes continuous
-text regardless of how many speakers are present. If you need speaker labels, see the
-[prose formatting](#prose-formatting-optional) section or wait for the `--diarize` flag
-(planned, not yet implemented).
+### Speaker detection in file mode
 
-You can also pass `--format` directly when calling the script:
+When the diarization add-on is installed, `transcribe.sh` offers speaker detection.
+Enable it and each transcript segment is labeled by speaker:
+
+```
+**Speaker 1:**
+
+It might also be because a lot of students have been getting sick...
+
+**Speaker 2:**
+
+I think that's a good idea...
+```
+
+You can also call the Python script directly with additional flags:
 
 ```bash
-venv/bin/python transcribe_file.py --file video.mp4 --lang en --format prose
-venv/bin/python transcribe_file.py --file video.mp4 --lang en --format timestamped
+venv/bin/python transcribe_file.py --file video.mp4 --lang en --format prose --diarize
+venv/bin/python transcribe_file.py --file video.mp4 --lang en --diarize --num-speakers 3
 ```
+
+`--num-speakers` is optional. Providing it when the number of speakers is known improves
+accuracy by preventing pyannote from merging or splitting similar voices.
 
 ## Real-time meeting transcription
 
@@ -156,9 +186,12 @@ venv/bin/python transcribe_file.py --file video.mp4 --lang en --format timestamp
 
 1. Open **Audio MIDI Setup** (Spotlight search)
 2. Click `+` > **Create Multi-Output Device**
-3. Check **your Mac's speakers (or headphones)** + **BlackHole 2ch** (enable Drift Correction on BlackHole)
+3. Check **your headphones** + **BlackHole 2ch** (enable Drift Correction on BlackHole)
 4. **System Settings > Sound > Output** > select the new Multi-Output Device
 5. In your meeting app (Google Meet, Zoom, etc.), leave Speaker as "System default"
+
+Using headphones (not built-in speakers) is required for channel-aware speaker detection:
+with speakers, the remote audio leaks into the microphone and cannot be separated cleanly.
 
 ### Start a meeting
 
@@ -166,7 +199,28 @@ venv/bin/python transcribe_file.py --file video.mp4 --lang en --format timestamp
 ./run.sh
 ```
 
-Select language, press ENTER to start recording, and Ctrl+C to stop and save.
+Select language, then choose a speaker detection mode:
+
+| Mode | How it works | Best for |
+|---|---|---|
+| Standard (default) | Live MFCC fingerprinting; each speaker labeled in real time | Quick notes, no diarize add-on |
+| High accuracy | Records the full meeting, then runs Whisper + pyannote after you stop | Accurate speaker labels; requires diarize add-on |
+
+In **High accuracy** mode you also choose the Whisper model (`large-v3` default) and output
+format (`prose` default, or `timestamped`).
+
+### Channel-aware speaker detection (High accuracy mode)
+
+When BlackHole is capturing system audio (headphone setup described above), the post-mode
+pipeline separates channels before diarizing:
+
+1. System channel (remote participants) is diarized with pyannote
+2. Microphone channel is analyzed for energy dominance; windows where the local mic is louder
+   than the system channel are labeled as **"You"**
+3. Both sets of turns are merged into a single speaker timeline
+
+If BlackHole captured nothing (e.g. you used built-in speakers), the pipeline falls back to
+diarizing the full mixed recording directly so at least some speaker separation is attempted.
 
 ## Post-processing (optional)
 
