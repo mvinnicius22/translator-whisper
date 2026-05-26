@@ -49,6 +49,13 @@ if [ "$MEETING_INSTALLED" != "yes" ]; then
   exit 1
 fi
 
+DIARIZE_INSTALLED=$(python3 - "$DIR/settings.json" <<'PYEOF'
+import json, sys
+d = json.load(open(sys.argv[1]))
+print("yes" if "diarize" in d.get("installed_modes", []) else "no")
+PYEOF
+)
+
 # ── Meeting language selection ─────────────────────────────────────────────────
 echo ""
 echo "${BOLD}${CYAN}$(t run.meeting_lang_title)${NC}"
@@ -69,6 +76,50 @@ case "$lang_choice" in
   *) MEETING_LANG="en" ;;
 esac
 
+# ── Speaker detection mode ────────────────────────────────────────────────────
+SPEAKER_MODE="live"
+POST_MODEL="large-v3"
+POST_FORMAT="prose"
+
+if [ "$DIARIZE_INSTALLED" = "yes" ]; then
+  echo ""
+  echo "${BOLD}${CYAN}Speaker detection / Detecção de falantes:${NC}"
+  echo "  ${YELLOW}1)${NC} Standard  live labels, current behavior  ${BOLD}(default)${NC}"
+  echo "  ${YELLOW}2)${NC} High accuracy  records meeting and diarizes after it ends"
+  echo ""
+  echo -n "${BOLD}Choice [1]: ${NC}"
+  read -r speaker_choice
+
+  if [ "$speaker_choice" = "2" ]; then
+    SPEAKER_MODE="post"
+    echo ""
+    echo "${BOLD}${CYAN}Whisper model for transcription:${NC}"
+    echo "  ${YELLOW}1)${NC} large-v3   best accuracy  ${BOLD}(default)${NC}"
+    echo "  ${YELLOW}2)${NC} medium     good accuracy (faster)"
+    echo ""
+    echo -n "${BOLD}Choice [1]: ${NC}"
+    read -r post_model_choice
+    case "$post_model_choice" in
+      2) POST_MODEL="medium" ;;
+      *) POST_MODEL="large-v3" ;;
+    esac
+    echo ""
+    echo "${BOLD}${CYAN}Output format:${NC}"
+    echo "  ${YELLOW}1)${NC} prose        clean continuous text by speaker  ${BOLD}(default)${NC}"
+    echo "  ${YELLOW}2)${NC} timestamped  each segment prefixed with [MM:SS]"
+    echo ""
+    echo -n "${BOLD}Choice [1]: ${NC}"
+    read -r post_fmt_choice
+    case "$post_fmt_choice" in
+      2) POST_FORMAT="timestamped" ;;
+      *) POST_FORMAT="prose" ;;
+    esac
+    echo ""
+    echo "${CYAN}High accuracy mode: meeting audio will be recorded and diarized after you stop.${NC}"
+    echo "${CYAN}Speaker labels appear in the transcript once processing is complete.${NC}"
+  fi
+fi
+
 echo ""
 
 # ── Meeting name ──────────────────────────────────────────────────────────────
@@ -77,4 +128,10 @@ read -r meeting_name
 
 # ── Run app ────────────────────────────────────────────────────────────────────
 source venv/bin/activate
-python -u app.py --ui-lang "$UI_LANG" --meeting-lang "$MEETING_LANG" --meeting-name "$meeting_name"
+python -u app.py \
+  --ui-lang "$UI_LANG" \
+  --meeting-lang "$MEETING_LANG" \
+  --meeting-name "$meeting_name" \
+  --speaker-mode "$SPEAKER_MODE" \
+  --model "$POST_MODEL" \
+  --format "$POST_FORMAT"
