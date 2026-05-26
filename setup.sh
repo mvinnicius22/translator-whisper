@@ -81,6 +81,35 @@ PYEOF
   echo "Use speaker detection in ./transcribe.sh or 'High accuracy' in ./run.sh."
 }
 
+# ── Notes add-on installer ───────────────────────────────────────────────────
+_install_notes_addon() {
+  echo ""
+  echo "${CYAN}Installing lecture notes PDF add-on...${NC}"
+  source "$DIR/venv/bin/activate"
+  pip install --upgrade pip --quiet
+  pip install -r "$DIR/requirements-notes.txt" --quiet
+  playwright install chromium
+
+  python3 - "$DIR/settings.json" <<'PYEOF'
+import json, sys
+path = sys.argv[1]
+d = json.load(open(path))
+modes = d.get("installed_modes", ["file"])
+if "notes" not in modes:
+    modes.append("notes")
+d["installed_modes"] = modes
+with open(path, "w") as f:
+    json.dump(d, f, indent=2)
+PYEOF
+
+  echo ""
+  echo "${GREEN}Lecture notes add-on installed.${NC}"
+  echo "Run ./notes.sh to generate a PDF from lecture transcripts."
+  echo ""
+  echo "${GREEN}Add-on de notas de aula instalado.${NC}"
+  echo "Execute ./notes.sh para gerar um PDF a partir das transcrições."
+}
+
 # ── Detect existing installation ──────────────────────────────────────────────
 if [ -d "$DIR/venv" ] && [ -f "$DIR/settings.json" ]; then
 
@@ -88,6 +117,12 @@ if [ -d "$DIR/venv" ] && [ -f "$DIR/settings.json" ]; then
 import json, sys
 d = json.load(open(sys.argv[1]))
 print(d.get("ui_language", "en"))
+PYEOF
+  )
+  FOLDER_STRUCTURE=$(python3 - "$DIR/settings.json" <<'PYEOF'
+import json, sys
+d = json.load(open(sys.argv[1]))
+print(d.get("folder_structure", "flat"))
 PYEOF
   )
   MEETING_INSTALLED=$(python3 - "$DIR/settings.json" <<'PYEOF'
@@ -102,6 +137,12 @@ d = json.load(open(sys.argv[1]))
 print("yes" if "diarize" in d.get("installed_modes", []) else "no")
 PYEOF
   )
+  NOTES_INSTALLED=$(python3 - "$DIR/settings.json" <<'PYEOF'
+import json, sys
+d = json.load(open(sys.argv[1]))
+print("yes" if "notes" in d.get("installed_modes", []) else "no")
+PYEOF
+  )
 
   echo ""
   echo "${BOLD}${CYAN}Existing installation detected / Instalação existente detectada${NC}"
@@ -111,6 +152,7 @@ PYEOF
   OPT_NUM=1
   OPT_ADD_MEETING=""
   OPT_ADD_DIARIZE=""
+  OPT_ADD_NOTES=""
 
   if [ "$MEETING_INSTALLED" != "yes" ]; then
     OPT_ADD_MEETING=$OPT_NUM
@@ -121,6 +163,12 @@ PYEOF
   if [ "$DIARIZE_INSTALLED" != "yes" ]; then
     OPT_ADD_DIARIZE=$OPT_NUM
     echo "  ${YELLOW}${OPT_NUM})${NC} Add speaker diarization / Adicionar detecção de falantes"
+    OPT_NUM=$((OPT_NUM + 1))
+  fi
+
+  if [ "$NOTES_INSTALLED" != "yes" ]; then
+    OPT_ADD_NOTES=$OPT_NUM
+    echo "  ${YELLOW}${OPT_NUM})${NC} Add lecture notes PDF / Adicionar notas de aula PDF"
     OPT_NUM=$((OPT_NUM + 1))
   fi
 
@@ -171,6 +219,10 @@ PYEOF
 
   elif [ -n "$OPT_ADD_DIARIZE" ] && [ "$existing_choice" = "$OPT_ADD_DIARIZE" ]; then
     install_diarize
+    exit 0
+
+  elif [ -n "$OPT_ADD_NOTES" ] && [ "$existing_choice" = "$OPT_ADD_NOTES" ]; then
+    _install_notes_addon
     exit 0
 
   elif [ "$existing_choice" = "$OPT_REINSTALL" ]; then
@@ -315,8 +367,8 @@ if [ "$USE_CASE" = "file" ]; then
   echo "Para transcrever um arquivo, execute:"
   echo "  ${BOLD}./transcribe.sh <caminho/para/arquivo.mp4>${NC}"
   echo ""
-  echo "To add real-time meeting support or speaker diarization later, run ./setup.sh again."
-  echo "Para adicionar suporte a reunião ou diarização depois, rode ./setup.sh novamente."
+  echo "To add real-time meeting support, speaker diarization, or lecture notes later, run ./setup.sh again."
+  echo "Para adicionar suporte a reunião, diarização ou notas de aula depois, rode ./setup.sh novamente."
 elif [ "$USE_CASE" = "both" ]; then
   echo "To transcribe a file: ${BOLD}./transcribe.sh${NC}"
   echo ""

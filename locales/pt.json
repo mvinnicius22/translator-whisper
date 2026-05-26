@@ -49,6 +49,14 @@
     "doc_transcript": "Transcrição",
     "doc_generated": "Gerado automaticamente em {date} às {time}"
   },
+  "notes": {
+    "available_lectures": "Aulas disponíveis:",
+    "select_lecture": "Selecione a aula (Enter para a mais recente): ",
+    "no_lectures": "Nenhuma aula encontrada. Transcreva alguns clipes de áudio primeiro.",
+    "aux_prompt": "Caminho para PDF auxiliar (Enter para pular): ",
+    "clips_found": "Encontrado(s) {n} transcript(s).",
+    "done": "Concluído."
+  },
   "process": {
     "recent_meetings": "Reuniões recentes:",
     "select_meeting": "Selecione o número da reunião (Enter para a mais recente): ",

@@ -49,6 +49,14 @@
     "doc_transcript": "Transcript",
     "doc_generated": "Auto-generated on {date} at {time}"
   },
+  "notes": {
+    "available_lectures": "Available lectures:",
+    "select_lecture": "Select lecture (Enter for most recent): ",
+    "no_lectures": "No lectures found. Transcribe some audio clips first.",
+    "aux_prompt": "Path to auxiliary PDF (Enter to skip): ",
+    "clips_found": "Found {n} transcript(s).",
+    "done": "Done."
+  },
   "process": {
     "recent_meetings": "Recent meetings:",
     "select_meeting": "Select meeting number (Enter for most recent): ",
