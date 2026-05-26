@@ -5,6 +5,7 @@ settings.json
 app.log
 .claude
 PLAN.md
+.hf_token
 
 # test / source media files
 *.mov
