@@ -1,4 +1,4 @@
-# Customer Insights — Developer Guide
+# Context Insights — Developer Guide
 
 This project is a local demo for a standup-to-client-update pipeline built for Cloud++, a Brazilian dev outsourcing company. The idea: record a team standup, transcribe it, run it through Claude to generate a professional English client update, review it on a web platform, and send it to the client.
 
@@ -170,4 +170,4 @@ This demo runs entirely local. The production roadmap:
 | Auth | None | Cloud++ SSO |
 | Trigger | Manual script | Slack `/standup` slash command |
 
-The **Board** view consumes daily snapshots of client project boards (`facts.json` + `brief.json` per day under `web/samples/boards/`). In the demo these files are committed; in production a scheduled job (Playwright scraping or board API) will generate them daily. The snapshots already feed the transcription pipeline as optional context (see *Board context for transcription* above), merging board state with standup context under the Customer Insights umbrella.
+The **Board** view consumes daily snapshots of client project boards (`facts.json` + `brief.json` per day under `web/samples/boards/`). In the demo these files are committed; in production a scheduled job (Playwright scraping or board API) will generate them daily. The snapshots already feed the transcription pipeline as optional context (see *Board context for transcription* above), merging board state with standup context under the Context Insights umbrella.
