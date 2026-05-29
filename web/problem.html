@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<style>
+  :root{
+    --teal:#0d9195; --teal-dark:#0a6f73; --orange:#ea7116;
+    --ink:#0c1018; --sub:#4d6275; --line:#d8e0e8; --bg-soft:#f4f7fa;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{font-family:-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;color:var(--ink);}
+  @page{size:A4;margin:0;}
+  .page{
+    width:210mm;height:297mm;padding:24mm 22mm;page-break-after:always;
+    position:relative;display:flex;flex-direction:column;
+  }
+  .page:last-child{page-break-after:auto;}
+
+  /* accent bars */
+  .page::before{content:"";position:absolute;top:0;left:0;right:0;height:6mm;
+    background:linear-gradient(90deg,var(--teal) 0%,var(--teal) 70%,var(--orange) 70%,var(--orange) 100%);}
+  .footer{position:absolute;bottom:14mm;left:22mm;right:22mm;display:flex;
+    justify-content:space-between;font-size:9pt;color:var(--sub);
+    border-top:1px solid var(--line);padding-top:5px;}
+
+  /* ── COVER ── */
+  .cover{justify-content:center;}
+  .badge{display:inline-block;align-self:flex-start;background:var(--orange);color:#fff;
+    font-size:12pt;font-weight:700;letter-spacing:3px;padding:7px 18px;border-radius:4px;}
+  .cover h1{font-size:46pt;line-height:1.05;margin:26px 0 6px;color:var(--teal-dark);}
+  .cover .sub{font-size:16pt;color:var(--sub);margin-bottom:48px;}
+  .field{margin:18px 0;}
+  .field .lbl{font-size:10pt;letter-spacing:2px;text-transform:uppercase;color:var(--teal);font-weight:700;}
+  .field .val{font-size:15pt;color:var(--ink);border-bottom:1.5px dashed var(--line);
+    padding:8px 0 6px;min-height:26px;color:var(--sub);font-style:italic;}
+
+  /* ── CONTENT ── */
+  h2{font-size:24pt;color:var(--teal-dark);margin-bottom:4px;}
+  h2 .num{color:var(--orange);}
+  .lead{font-size:12pt;color:var(--sub);margin-bottom:22px;line-height:1.5;}
+  ul{list-style:none;}
+  li{position:relative;padding:11px 0 11px 30px;font-size:12.5pt;line-height:1.5;
+    border-bottom:1px solid var(--bg-soft);}
+  li::before{content:"";position:absolute;left:4px;top:18px;width:9px;height:9px;
+    background:var(--teal);border-radius:2px;transform:rotate(45deg);}
+  li b{color:var(--ink);}
+  .card{background:var(--bg-soft);border-left:4px solid var(--orange);
+    padding:16px 20px;margin-top:auto;border-radius:0 6px 6px 0;}
+  .card .q{font-size:13pt;font-style:italic;color:var(--teal-dark);}
+  .card .c{font-size:10.5pt;color:var(--sub);margin-top:5px;}
+</style>
+</head>
+<body>
+
+<!-- PAGE 1 — COVER -->
+<section class="page cover">
+  <span class="badge">HACKATHON</span>
+  <h1>Context&nbsp;Insights</h1>
+  <div class="sub">Da reunião ao cliente, sem fricção.</div>
+
+  <div class="field">
+    <div class="lbl">Projeto</div>
+    <div class="val" style="color:var(--ink);font-style:normal;">Context Insights</div>
+  </div>
+  <div class="field">
+    <div class="lbl">Participantes</div>
+    <div class="val" style="color:var(--ink);font-style:normal;">Arthur Balboa</div>
+    <div class="val" style="margin-top:10px;color:var(--ink);font-style:normal;">Marcos Freire</div>
+    <div class="val" style="margin-top:10px;color:var(--ink);font-style:normal;">Paulo Henrique</div>
+  </div>
+
+  <div class="footer"><span>Cloud++ &middot; HACKATHON</span><span>2026</span></div>
+</section>
+
+<!-- PAGE 2 — PROBLEM -->
+<section class="page">
+  <h2><span class="num">01.</span> O problema</h2>
+  <p class="lead">Cloud++ é uma empresa brasileira de terceirização de desenvolvimento.
+     Manter clientes remotos informados sobre o progresso dos projetos custa tempo e gera atrito.</p>
+  <ul>
+    <li><b>Barreira de idioma</b> — standups e comunicação interna em português; clientes esperam updates em inglês profissional.</li>
+    <li><b>Trabalho manual repetitivo</b> — escrever relatórios de status consome horas de devs e PMs toda semana, tempo que não vira código.</li>
+    <li><b>Conhecimento se perde</b> — decisões discutidas só verbalmente nas reuniões nunca ficam registradas e somem.</li>
+    <li><b>Qualidade inconsistente</b> — tom e clareza do update dependem de quem escreveu naquele dia.</li>
+    <li><b>Confiança em risco</b> — updates atrasados, vagos ou ausentes corroem a relação com o cliente.</li>
+    <li><b>Dados sensíveis</b> — enviar áudio e transcrições de clientes para serviços externos levanta questões de privacidade e compliance.</li>
+  </ul>
+  <div class="footer"><span>Cloud++ &middot; Customer Insights</span><span>O problema</span></div>
+</section>
+
+<!-- PAGE 3 — WHY IT MATTERS -->
+<section class="page">
+  <h2><span class="num">02.</span> Por que importa</h2>
+  <p class="lead">O custo não é só de horas — é de relação, contexto e previsibilidade.</p>
+  <ul>
+    <li><b>Escala</b> — o atrito cresce com cada projeto e cada cliente novo; não dá para resolver contratando mais gente para escrever e-mails.</li>
+    <li><b>Contexto fragmentado</b> — progresso real vive espalhado entre reuniões, mensagens e o board do projeto, nunca em um lugar só.</li>
+    <li><b>Reação, não antecipação</b> — sem registro contínuo, problemas chegam ao cliente tarde demais.</li>
+    <li><b>Memória do projeto</b> — "por que rejeitamos a Feature X?" deveria ter resposta rastreável, não depender de quem lembra.</li>
+    <li><b>Idioma e fuso</b> — comunicação assíncrona com cliente estrangeiro amplifica cada um desses pontos.</li>
+  </ul>
+  <div class="card">
+    <div class="q">"Toda hora gasta escrevendo update é hora não gasta construindo o produto do cliente."</div>
+    <div class="c">A solução vem a seguir nesta apresentação.</div>
+  </div>
+  <div class="footer"><span>Cloud++ &middot; Customer Insights</span><span>Por que importa</span></div>
+</section>
+
+</body>
+</html>

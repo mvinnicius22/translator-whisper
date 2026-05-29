@@ -57,8 +57,10 @@ Open `http://localhost:5050`. Two sample transcripts (real standups) are already
 | File | Role |
 |------|------|
 | `web/server.py` | Flask API + static server, port 5050 |
-| `web/index.html` | List view — pending updates, archived, explorer mode |
+| `web/index.html` | List view — pending updates, archived, explorer mode, Board |
 | `web/update.html` | Review page — edit, compare raw transcript, send or archive |
+| `web/board.html` | Board view — day list + full snapshot / brief side-by-side |
+| `web/samples/boards/<date>/` | Daily board snapshots: `facts.json` (full) + `brief.json` |
 | `web/app.js` | All frontend logic |
 | `web/style.css` | Cloud++ design system styles |
 | `web/data.json` | Local database — list of processed updates |
@@ -74,13 +76,22 @@ Open `http://localhost:5050`. Two sample transcripts (real standups) are already
 
 ## Web platform features
 
-### List page (`/`)
-- **My Recordings / Team** tabs — filter by owner
-- **Pending Review / Archived** tabs — filter by status
-- **Import Recording** — upload any audio/video file; Whisper runs server-side
-- **Import Transcript** — paste or upload a `.txt`/`.md` transcript; Claude generates the update directly
-- **Generate Combined** — select 2+ items with the checkboxes, then generate a single consolidated period update
-- **Explorer mode** (sparkles button) — ask natural-language questions across all transcripts (e.g. "Why did we reject Feature X?")
+The list page is a **unified feed of Updates** — the living, client-facing record of the project. An *Update* is any unit of client-relevant project knowledge; today there are two types, each tagged with a badge and leading with the client-facing result:
+- **Meeting** — a recording/transcript processed by Claude. Card title = the update subject; subtitle = meeting name · date. Click → `/update.html`.
+- **Board** — a daily project-board snapshot (informational, auto-generated). Card title = the date; subtitle = board name · % complete · shipped count. Click → `/board.html?date=`.
+
+Controls:
+- **Source** tabs (`All · Meetings · Board`, left-most) — filter the feed by signal source. Board snapshots are informational, so under Source = Board the owner/status tabs are hidden.
+- **My Updates / Team** tabs — filter meeting updates by owner.
+- **Pending Review / Archived** tabs — filter meeting updates by status.
+- **Import** dropdown — add an artifact: a **Recording** (audio/video, Whisper runs server-side) or a **Transcript** (paste/upload `.txt`/`.md`, Claude generates the update).
+- **Generate Combined** — select 2+ meeting updates, generate a single consolidated period update.
+- **Explorer mode** (sparkles button) — ask natural-language questions across all transcripts (e.g. "Why did we reject Feature X?").
+
+The board detail page (`/board.html?date=<YYYY-MM-DD>`) shows the day's two files side by side: `facts.json` (full snapshot at end of day) on the left, `brief.json` (movement & insights) on the right — same split layout as the Raw transcript view.
+
+### Board context for transcription
+When a transcript is processed into a client update, the server looks for a board snapshot dated the same day (`web/samples/boards/<YYYY-MM-DD>/`). If found, `facts.json` + `brief.json` are passed to Claude as **optional reference context** to improve grounding and reduce hallucination. The board is never required — absent it, processing is unchanged.
 
 ### Review page (`/update.html?id=<id>`)
 - Edit the generated update (auto-saved on every keystroke)
@@ -124,6 +135,8 @@ urllib.request.urlopen(req)
 | POST | `/api/archive/<id>` | Mark as archived |
 | POST | `/api/delete/<id>` | Delete permanently |
 | GET | `/api/transcript/<id>` | Fetch raw transcript text |
+| GET | `/api/boards` | List board snapshot days |
+| GET | `/api/board/<date>` | Fetch a day's `facts` + `brief` JSON |
 | POST | `/api/import/audio` | Upload audio file, run full pipeline |
 | POST | `/api/import/transcript` | Submit transcript text, run Claude agent |
 | POST | `/api/reprocess/<id>` | Re-run Claude on edited transcript |
@@ -157,4 +170,4 @@ This demo runs entirely local. The production roadmap:
 | Auth | None | Cloud++ SSO |
 | Trigger | Manual script | Slack `/standup` slash command |
 
-The "Board" tab in the UI is a placeholder for a future integration that will pull data from client project boards (Playwright scraping or API) and merge it with standup context under the Customer Insights umbrella.
+The **Board** view consumes daily snapshots of client project boards (`facts.json` + `brief.json` per day under `web/samples/boards/`). In the demo these files are committed; in production a scheduled job (Playwright scraping or board API) will generate them daily. The snapshots already feed the transcription pipeline as optional context (see *Board context for transcription* above), merging board state with standup context under the Customer Insights umbrella.

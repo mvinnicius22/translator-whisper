@@ -1,0 +1,576 @@
+{
+  "board": "Helm — Engineering Board",
+  "url": "https://www.notion.so/ea4048c841914358a08496acc0f12e25",
+  "date": "2026-05-29",
+  "period": "day",
+  "totals": {
+    "tickets": 18,
+    "points": 116,
+    "done_points": 89,
+    "done_tickets": 12,
+    "pct": 77,
+    "basis": "points"
+  },
+  "completed": [
+    {
+      "id": "HELM-4",
+      "title": "One-click rollback to previous release",
+      "story_points": 8,
+      "assignee": "Ana Reis"
+    },
+    {
+      "id": "HELM-6",
+      "title": "Deploy timeline / activity feed UI",
+      "story_points": 5,
+      "assignee": "Diego Luz"
+    },
+    {
+      "id": "HELM-8",
+      "title": "Blue-green deployment strategy",
+      "story_points": 13,
+      "assignee": "Bruno Costa"
+    },
+    {
+      "id": "HELM-9",
+      "title": "Build cache layer for faster CI",
+      "story_points": 13,
+      "assignee": "Ana Reis"
+    },
+    {
+      "id": "HELM-10",
+      "title": "Memory leak in long-running log streamer",
+      "story_points": 5,
+      "assignee": "Diego Luz"
+    },
+    {
+      "id": "HELM-12",
+      "title": "Audit log for all deploy actions",
+      "story_points": 8,
+      "assignee": "Diego Luz"
+    },
+    {
+      "id": "HELM-13",
+      "title": "Multi-region deploy targets",
+      "story_points": 13,
+      "assignee": "Bruno Costa"
+    }
+  ],
+  "delivered_points": 65,
+  "delivered_count": 7,
+  "by_status": {
+    "Todo": {
+      "n": 2,
+      "pts": 11
+    },
+    "In Progress": {
+      "n": 3,
+      "pts": 11
+    },
+    "Feedback": {
+      "n": 0,
+      "pts": 0
+    },
+    "Testing": {
+      "n": 1,
+      "pts": 5
+    },
+    "Done": {
+      "n": 12,
+      "pts": 89
+    }
+  },
+  "by_assignee": {
+    "Ana Reis": {
+      "open": 1,
+      "pts": 0
+    },
+    "Bruno Costa": {
+      "open": 0,
+      "pts": 0
+    },
+    "Diego Luz": {
+      "open": 1,
+      "pts": 3
+    },
+    "Carla Dias": {
+      "open": 2,
+      "pts": 8
+    },
+    "Elena Park": {
+      "open": 1,
+      "pts": 8
+    }
+  },
+  "cards": [
+    {
+      "id": "HELM-1",
+      "title": "OAuth2 login with GitHub + GitLab",
+      "url": "https://www.notion.so/36f3f5b19ace817eb9f8d7415ed7296d",
+      "status": "Done",
+      "assignee": "Ana Reis",
+      "type": "Feature",
+      "blocked_by": [],
+      "blocks": [],
+      "history": {
+        "edits": [],
+        "comments": []
+      }
+    },
+    {
+      "id": "HELM-2",
+      "title": "Pipeline YAML schema parser",
+      "url": "https://www.notion.so/36f3f5b19ace8133915fec24553fc158",
+      "status": "Done",
+      "assignee": "Bruno Costa",
+      "type": "Feature",
+      "blocked_by": [],
+      "blocks": [],
+      "history": {
+        "edits": [],
+        "comments": []
+      }
+    },
+    {
+      "id": "HELM-3",
+      "title": "Fix flaky deploy-status websocket reconnect",
+      "url": "https://www.notion.so/36f3f5b19ace817e9524cdc7e591972c",
+      "status": "Done",
+      "assignee": "Diego Luz",
+      "type": "Bug",
+      "blocked_by": [],
+      "blocks": [],
+      "history": {
+        "edits": [],
+        "comments": []
+      }
+    },
+    {
+      "id": "HELM-4",
+      "title": "One-click rollback to previous release",
+      "url": "https://www.notion.so/36f3f5b19ace81cf9a89c214b7f3940f",
+      "status": "Done",
+      "assignee": "Ana Reis",
+      "type": "Feature",
+      "blocked_by": [],
+      "blocks": [],
+      "history": {
+        "edits": [],
+        "comments": []
+      }
+    },
+    {
+      "id": "HELM-5",
+      "title": "Environment variable encryption at rest",
+      "url": "https://www.notion.so/36f3f5b19ace815aac32dd619b9f5851",
+      "status": "Testing",
+      "assignee": "Carla Dias",
+      "type": "Feature",
+      "blocked_by": [],
+      "blocks": [],
+      "history": {
+        "edits": [],
+        "comments": []
+      }
+    },
+    {
+      "id": "HELM-6",
+      "title": "Deploy timeline / activity feed UI",
+      "url": "https://www.notion.so/36f3f5b19ace812ba729ce001a9f54d2",
+      "status": "Done",
+      "assignee": "Diego Luz",
+      "type": "Feature",
+      "blocked_by": [],
+      "blocks": [],
+      "history": {
+        "edits": [],
+        "comments": []
+      }
+    },
+    {
+      "id": "HELM-7",
+      "title": "Slack notifications on failed deploy",
+      "url": "https://www.notion.so/36f3f5b19ace8135bb05c13602524df9",
+      "status": "Done",
+      "assignee": "Diego Luz",
+      "type": "Feature",
+      "blocked_by": [],
+      "blocks": [],
+      "history": {
+        "edits": [],
+        "comments": []
+      }
+    },
+    {
+      "id": "HELM-8",
+      "title": "Blue-green deployment strategy",
+      "url": "https://www.notion.so/36f3f5b19ace81d0ab55caef1a8f92b6",
+      "status": "Done",
+      "assignee": "Bruno Costa",
+      "type": "Feature",
+      "blocked_by": [
+        "HELM-11"
+      ],
+      "blocks": [
+        "HELM-13"
+      ],
+      "history": {
+        "edits": [],
+        "comments": []
+      }
+    },
+    {
+      "id": "HELM-9",
+      "title": "Build cache layer for faster CI",
+      "url": "https://www.notion.so/36f3f5b19ace819aa165d76a161bd67e",
+      "status": "Done",
+      "assignee": "Ana Reis",
+      "type": "Feature",
+      "blocked_by": [],
+      "blocks": [],
+      "history": {
+        "edits": [],
+        "comments": []
+      }
+    },
+    {
+      "id": "HELM-10",
+      "title": "Memory leak in long-running log streamer",
+      "url": "https://www.notion.so/36f3f5b19ace815eb18bfcfb20a75466",
+      "status": "Done",
+      "assignee": "Diego Luz",
+      "type": "Bug",
+      "blocked_by": [],
+      "blocks": [],
+      "history": {
+        "edits": [],
+        "comments": []
+      }
+    },
+    {
+      "id": "HELM-11",
+      "title": "Spike: evaluate Temporal vs custom queue",
+      "url": "https://www.notion.so/36f3f5b19ace815b8ea8e62682ac573a",
+      "status": "In Progress",
+      "assignee": "Carla Dias",
+      "type": "Spike",
+      "blocked_by": [],
+      "blocks": [
+        "HELM-8"
+      ],
+      "history": {
+        "edits": [],
+        "comments": []
+      }
+    },
+    {
+      "id": "HELM-12",
+      "title": "Audit log for all deploy actions",
+      "url": "https://www.notion.so/36f3f5b19ace817f8bfcf029a9a90083",
+      "status": "Done",
+      "assignee": "Diego Luz",
+      "type": "Feature",
+      "blocked_by": [],
+      "blocks": [],
+      "history": {
+        "edits": [],
+        "comments": []
+      }
+    },
+    {
+      "id": "HELM-13",
+      "title": "Multi-region deploy targets",
+      "url": "https://www.notion.so/36f3f5b19ace811a9562cd471d1a968d",
+      "status": "Done",
+      "assignee": "Bruno Costa",
+      "type": "Feature",
+      "blocked_by": [
+        "HELM-8"
+      ],
+      "blocks": [],
+      "history": {
+        "edits": [],
+        "comments": []
+      }
+    },
+    {
+      "id": "HELM-14",
+      "title": "Role-based access control (RBAC)",
+      "url": "https://www.notion.so/36f3f5b19ace81a68d57dd377560e1c8",
+      "status": "In Progress",
+      "assignee": "Elena Park",
+      "type": "Feature",
+      "blocked_by": [],
+      "blocks": [],
+      "history": {
+        "edits": [],
+        "comments": []
+      }
+    },
+    {
+      "id": "HELM-15",
+      "title": "Upgrade Node 18 → 22 across services",
+      "url": "https://www.notion.so/36f3f5b19ace81619892fb3de8ca6ff0",
+      "status": "Todo",
+      "assignee": "Diego Luz",
+      "type": "Chore",
+      "blocked_by": [],
+      "blocks": [],
+      "history": {
+        "edits": [],
+        "comments": []
+      }
+    },
+    {
+      "id": "HELM-16",
+      "title": "Dark mode for dashboard",
+      "url": "https://www.notion.so/36f3f5b19ace81c08361e4735586a896",
+      "status": "In Progress",
+      "assignee": "Ana Reis",
+      "type": "Feature",
+      "blocked_by": [],
+      "blocks": [],
+      "history": {
+        "edits": [],
+        "comments": []
+      }
+    },
+    {
+      "id": "HELM-17",
+      "title": "Secrets printed in plaintext build logs",
+      "url": "https://www.notion.so/36f3f5b19ace812ab08ffe17f5abeaf1",
+      "status": "Done",
+      "assignee": "Carla Dias",
+      "type": "Bug",
+      "blocked_by": [],
+      "blocks": [],
+      "history": {
+        "edits": [],
+        "comments": []
+      }
+    },
+    {
+      "id": "HELM-18",
+      "title": "Migrate metrics from StatsD to OpenTelemetry",
+      "url": "https://www.notion.so/36f3f5b19ace8121a3aec5c5abcb0d2f",
+      "status": "Todo",
+      "assignee": null,
+      "type": "Chore",
+      "blocked_by": [],
+      "blocks": [],
+      "history": {
+        "edits": [],
+        "comments": []
+      }
+    }
+  ],
+  "diff": {
+    "baseline": true,
+    "baseline_date": "2026-05-29",
+    "moved": [
+      {
+        "id": "HELM-4",
+        "field": "status",
+        "from": "In Progress",
+        "to": "Done"
+      },
+      {
+        "id": "HELM-6",
+        "field": "status",
+        "from": "In Progress",
+        "to": "Done"
+      },
+      {
+        "id": "HELM-8",
+        "field": "status",
+        "from": "In Progress",
+        "to": "Done"
+      },
+      {
+        "id": "HELM-9",
+        "field": "status",
+        "from": "In Progress",
+        "to": "Done"
+      },
+      {
+        "id": "HELM-10",
+        "field": "status",
+        "from": "In Progress",
+        "to": "Done"
+      },
+      {
+        "id": "HELM-12",
+        "field": "status",
+        "from": "In Progress",
+        "to": "Done"
+      },
+      {
+        "id": "HELM-13",
+        "field": "status",
+        "from": "Todo",
+        "to": "Done"
+      },
+      {
+        "id": "HELM-14",
+        "field": "status",
+        "from": "Todo",
+        "to": "In Progress"
+      },
+      {
+        "id": "HELM-16",
+        "field": "status",
+        "from": "Todo",
+        "to": "In Progress"
+      },
+      {
+        "id": "HELM-16",
+        "field": "assignee",
+        "from": null,
+        "to": "Ana Reis"
+      }
+    ],
+    "added": [],
+    "removed": [],
+    "completed": [
+      "HELM-4",
+      "HELM-6",
+      "HELM-8",
+      "HELM-9",
+      "HELM-10",
+      "HELM-12",
+      "HELM-13"
+    ],
+    "period": "day"
+  },
+  "movements_enriched": [
+    {
+      "id": "HELM-4",
+      "field": "status",
+      "from": "In Progress",
+      "to": "Done",
+      "who": null,
+      "when": null,
+      "comment": null
+    },
+    {
+      "id": "HELM-6",
+      "field": "status",
+      "from": "In Progress",
+      "to": "Done",
+      "who": null,
+      "when": null,
+      "comment": null
+    },
+    {
+      "id": "HELM-8",
+      "field": "status",
+      "from": "In Progress",
+      "to": "Done",
+      "who": null,
+      "when": null,
+      "comment": null
+    },
+    {
+      "id": "HELM-9",
+      "field": "status",
+      "from": "In Progress",
+      "to": "Done",
+      "who": null,
+      "when": null,
+      "comment": null
+    },
+    {
+      "id": "HELM-10",
+      "field": "status",
+      "from": "In Progress",
+      "to": "Done",
+      "who": null,
+      "when": null,
+      "comment": null
+    },
+    {
+      "id": "HELM-12",
+      "field": "status",
+      "from": "In Progress",
+      "to": "Done",
+      "who": null,
+      "when": null,
+      "comment": null
+    },
+    {
+      "id": "HELM-13",
+      "field": "status",
+      "from": "Todo",
+      "to": "Done",
+      "who": null,
+      "when": null,
+      "comment": null
+    },
+    {
+      "id": "HELM-14",
+      "field": "status",
+      "from": "Todo",
+      "to": "In Progress",
+      "who": null,
+      "when": null,
+      "comment": null
+    },
+    {
+      "id": "HELM-16",
+      "field": "status",
+      "from": "Todo",
+      "to": "In Progress",
+      "who": null,
+      "when": null,
+      "comment": null
+    },
+    {
+      "id": "HELM-16",
+      "field": "assignee",
+      "from": null,
+      "to": "Ana Reis",
+      "who": null,
+      "when": null,
+      "comment": null
+    }
+  ],
+  "blocked": [
+    {
+      "id": "HELM-8",
+      "title": "Blue-green deployment strategy",
+      "priority": "P0 — Critical",
+      "blocked_by": [
+        "HELM-11"
+      ]
+    },
+    {
+      "id": "HELM-13",
+      "title": "Multi-region deploy targets",
+      "priority": "P2 — Medium",
+      "blocked_by": [
+        "HELM-8"
+      ]
+    }
+  ],
+  "overdue": [
+    {
+      "id": "HELM-5",
+      "title": "Environment variable encryption at rest",
+      "status": "Testing",
+      "due_date": "2026-05-25"
+    },
+    {
+      "id": "HELM-14",
+      "title": "Role-based access control (RBAC)",
+      "status": "In Progress",
+      "due_date": "2026-05-15"
+    }
+  ],
+  "unassigned": [
+    {
+      "id": "HELM-18",
+      "title": "Migrate metrics from StatsD to OpenTelemetry",
+      "priority": "P2 — Medium",
+      "story_points": 8
+    }
+  ]
+}

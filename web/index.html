@@ -112,7 +112,7 @@
         <div class="page-title-row">
           <div>
             <h1 class="page-title">Customer Insights</h1>
-            <p class="page-subtitle">Browse and manage customer updates from standups and board integrations.</p>
+            <p class="page-subtitle">A living record of how the project is going — team standups and board signals, ready for the client.</p>
           </div>
           <div class="page-header-actions">
             <button class="btn btn-ghost" id="btn-explorer" onclick="toggleExplorer()">
@@ -123,31 +123,54 @@
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><path d="M13 6h3a2 2 0 0 1 2 2v7"/><path d="M11 18H8a2 2 0 0 1-2-2V9"/></svg>
               <span id="btn-combined-label">Generate Combined</span>
             </button>
-            <button class="btn btn-ghost" onclick="openModal('transcript')">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10,9 9,9 8,9"/></svg>
-              Import Transcript
-            </button>
-            <button class="btn btn-teal" onclick="openModal('audio')">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17,8 12,3 7,8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-              Import Recording
-            </button>
+            <div class="dropdown" id="import-dropdown">
+              <button class="btn btn-teal" id="btn-import" onclick="toggleImportMenu(event)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                Import
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;margin-left:2px"><polyline points="6,9 12,15 18,9"/></svg>
+              </button>
+              <div class="dropdown-menu">
+                <button class="dropdown-item" onclick="openImport('audio')">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17,8 12,3 7,8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                  Recording
+                </button>
+                <button class="dropdown-item" onclick="openImport('transcript')">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10,9 9,9 8,9"/></svg>
+                  Transcript
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
       <div class="tab-bar-wrap">
         <div class="tab-bars-row">
-          <div class="tab-bar">
+          <div class="tab-bar" id="source-bar">
+            <div class="tab active" id="tab-src-all" onclick="setSource('all')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+              All
+            </div>
+            <div class="tab" id="tab-src-meetings" onclick="setSource('meetings')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v4M8 23h8"/></svg>
+              Meetings
+            </div>
+            <div class="tab" id="tab-src-board" onclick="setSource('board')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+              Board
+            </div>
+          </div>
+          <div class="tab-bar" id="owner-bar">
             <div class="tab active" id="tab-me" onclick="setOwner('me')">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
-              My Recordings
+              My Updates
             </div>
             <div class="tab" id="tab-team" onclick="setOwner('team')">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
               Team
             </div>
           </div>
-          <div class="tab-bar">
+          <div class="tab-bar" id="status-bar">
             <div class="tab active" id="tab-pending" onclick="setStatus('pending')">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg>
               Pending Review
@@ -155,10 +178,6 @@
             <div class="tab" id="tab-archived" onclick="setStatus('archived')">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="21,8 21,21 3,21 3,8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg>
               Archived
-            </div>
-            <div class="tab tab-soon" title="Coming soon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
-              Board
             </div>
           </div>
         </div>
@@ -186,11 +205,11 @@
                 </button>
               </div>
               <div class="explorer-pills">
-                <button class="explorer-pill" onclick="fillExplore('Why did we reject Client Feature X?')">Why did we reject Client Feature X?</button>
-                <button class="explorer-pill" onclick="fillExplore('What blockers did the team raise last sprint?')">What blockers last sprint?</button>
-                <button class="explorer-pill" onclick="fillExplore('What backend decisions were made last week?')">Backend decisions last week?</button>
-                <button class="explorer-pill" onclick="fillExplore('Why was the deadline pushed?')">Why was the deadline pushed?</button>
-                <button class="explorer-pill" onclick="fillExplore('What did we agree to prioritize?')">What did we agree to prioritize?</button>
+                <button class="explorer-pill" onclick="fillExplore('Why is the profile migration blocked?')">Why is profile migration blocked?</button>
+                <button class="explorer-pill" onclick="fillExplore('Which items are overdue and who owns them?')">What is overdue, and who owns it?</button>
+                <button class="explorer-pill" onclick="fillExplore('What is the status of the OAuth2 login feature?')">OAuth2 login status?</button>
+                <button class="explorer-pill" onclick="fillExplore('What is blocking the blue-green deployment?')">What blocks blue-green deploy?</button>
+                <button class="explorer-pill" onclick="fillExplore('How is the team handling AI token usage and costs?')">AI token cost plan?</button>
               </div>
             </div>
           </div>

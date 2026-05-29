@@ -10,14 +10,28 @@ import subprocess
 from pathlib import Path
 
 
-def run_agent(transcript_path: str, agent_path: str, output_path: str):
+def run_agent(transcript_path: str, agent_path: str, output_path: str,
+              board_context: str | None = None, model: str | None = None):
     transcript = Path(transcript_path).read_text(encoding="utf-8")
     agent_prompt = Path(agent_path).read_text(encoding="utf-8")
 
-    full_prompt = f"{agent_prompt}\n\nHere is the meeting transcript:\n\n{transcript}"
+    if board_context:
+        full_prompt = (
+            f"{agent_prompt}\n\n"
+            "## Board context (optional reference — may be incomplete; "
+            "do not invent facts from it)\n"
+            f"{board_context}\n\n"
+            f"## Transcript\n\n{transcript}"
+        )
+    else:
+        full_prompt = f"{agent_prompt}\n\nHere is the meeting transcript:\n\n{transcript}"
+
+    cmd = ["claude", "-p", full_prompt]
+    if model:
+        cmd[1:1] = ["--model", model]
 
     result = subprocess.run(
-        ["claude", "-p", full_prompt],
+        cmd,
         capture_output=True,
         text=True,
     )

@@ -1,0 +1,37 @@
+{
+  "board": "Helm — Engineering Board",
+  "board_url": "https://www.notion.so/ea4048c841914358a08496acc0f12e25",
+  "date": "2026-05-29",
+  "period": "day",
+  "client_message": "Strong day on Helm: the team shipped seven items, including one-click rollback to a previous release, zero-downtime blue-green deployments, multi-region deploy targets, and a faster build pipeline. Overall the project is 77% complete and tracking well. Two items need your awareness: encryption of stored configuration secrets and role-based access controls are both past their original target dates and still in progress, which affects the security posture we can offer your end customers. We would recommend confirming priority on these two so we can lock in firm delivery dates.",
+  "progress": {
+    "scope_complete_pct": 77,
+    "delivered_points": 65,
+    "delivered_count": 7,
+    "basis": "points",
+    "signal": "on track"
+  },
+  "shipped": [
+    { "id": "HELM-4", "title": "One-click rollback to previous release" },
+    { "id": "HELM-6", "title": "Deploy timeline / activity feed UI" },
+    { "id": "HELM-8", "title": "Blue-green deployment strategy" },
+    { "id": "HELM-9", "title": "Build cache layer for faster CI" },
+    { "id": "HELM-10", "title": "Memory leak in long-running log streamer" },
+    { "id": "HELM-12", "title": "Audit log for all deploy actions" },
+    { "id": "HELM-13", "title": "Multi-region deploy targets" }
+  ],
+  "attention": [
+    {
+      "title": "Secrets encryption is past its target date",
+      "detail": "Encrypting your stored configuration secrets was due May 25 and is still in final testing. Until it lands, sensitive credentials are not yet protected to the standard we want for your production data, so we would like to prioritize closing it out this week."
+    },
+    {
+      "title": "User access controls are running late",
+      "detail": "Role-based access control, which governs who on your team can trigger deploys and view sensitive actions, was due May 15 and remains in progress. This is a common requirement before broader rollout, and the slip puts pressure on any timeline that depends on multi-user access."
+    },
+    {
+      "title": "Two delivered features still flagged as blocked",
+      "detail": "Blue-green deployments and multi-region targets shipped today but are still marked as blocked in our tracking. This is a housekeeping issue rather than a delivery risk, and we are clearing the stale flags to keep your status view accurate."
+    }
+  ]
+}

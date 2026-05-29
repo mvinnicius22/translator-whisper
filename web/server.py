@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import json
+import re
 import shutil
 import sys
 import tempfile
@@ -22,6 +23,8 @@ PORT = 5050
 AGENT_FILE          = _ROOT / "agents" / "client_update.md"
 COMBINED_AGENT_FILE = _ROOT / "agents" / "combined_update.md"
 EXPLORE_AGENT_FILE  = _ROOT / "agents" / "explore.md"
+BOARDS_DIR          = Path(__file__).parent / "samples" / "boards"
+_DATE_RE            = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 
 _jobs: dict[str, dict] = {}
 
@@ -45,6 +48,91 @@ def find_update(updates: list, uid: str) -> dict | None:
 def resolve_transcript(path: str) -> Path:
     p = Path(path)
     return p if p.is_absolute() else _ROOT / p
+
+
+# ── Board helpers ───────────────────────────────────────────────────────────
+
+def find_board(date: str) -> dict | None:
+    """Return {facts: Path, brief: Path|None} for a board day, or None."""
+    if not _DATE_RE.match(date or ""):
+        return None
+    day_dir = BOARDS_DIR / date
+    facts = day_dir / "facts.json"
+    if not facts.exists():
+        return None
+    brief = day_dir / "brief.json"
+    return {"facts": facts, "brief": brief if brief.exists() else None}
+
+
+def _build_board_context(date: str) -> str | None:
+    """Raw full + brief board text for a day, used as optional agent context."""
+    board = find_board(date)
+    if not board:
+        return None
+    parts = ["FULL BOARD SNAPSHOT (facts.json):", board["facts"].read_text(encoding="utf-8")]
+    if board["brief"]:
+        parts += ["", "BOARD BRIEF (brief.json):", board["brief"].read_text(encoding="utf-8")]
+    return "\n".join(parts)
+
+
+def _build_board_digest(date: str) -> str | None:
+    """Compact, reference-bearing board summary for the explorer.
+
+    Keeps the fields the agent cites (id, title, status, assignee, due,
+    blocked_by/blocks, url + brief client message/attention) and drops the
+    bulky redundant blocks (history, movements_enriched, by_status, etc.) so
+    the prompt — and thus the response — stays fast.
+    """
+    board = find_board(date)
+    if not board:
+        return None
+    try:
+        facts = json.loads(board["facts"].read_text(encoding="utf-8"))
+    except (ValueError, OSError):
+        return _build_board_context(date)  # fall back to raw on parse failure
+
+    due_by = {o["id"]: o.get("due_date") for o in facts.get("overdue", [])}
+    t = facts.get("totals", {})
+    lines = [
+        f"Board: {facts.get('board', 'Project Board')} ({date}) — "
+        f"{t.get('pct', '?')}% complete, {t.get('done_tickets', '?')}/{t.get('tickets', '?')} tickets done.",
+        "",
+        "CARDS (id | title | status | assignee | type | due | blocked_by | blocks | url):",
+    ]
+    for c in facts.get("cards", []):
+        lines.append(
+            " | ".join([
+                c.get("id", "?"),
+                c.get("title", ""),
+                c.get("status", ""),
+                c.get("assignee") or "unassigned",
+                c.get("type", ""),
+                due_by.get(c.get("id"), "") or "",
+                ",".join(c.get("blocked_by", [])) or "-",
+                ",".join(c.get("blocks", [])) or "-",
+                c.get("url", ""),
+            ])
+        )
+
+    overdue = facts.get("overdue", [])
+    if overdue:
+        lines += ["", "OVERDUE:"]
+        lines += [f"- {o['id']} \"{o.get('title','')}\" ({o.get('status','')}, due {o.get('due_date','')})"
+                  for o in overdue]
+
+    if board["brief"]:
+        try:
+            brief = json.loads(board["brief"].read_text(encoding="utf-8"))
+            if brief.get("client_message"):
+                lines += ["", "CLIENT BRIEF:", brief["client_message"]]
+            attn = brief.get("attention", [])
+            if attn:
+                lines += ["", "NEEDS ATTENTION:"]
+                lines += [f"- {a.get('title','')}: {a.get('detail','')}" for a in attn]
+        except (ValueError, OSError):
+            pass
+
+    return "\n".join(lines)
 
 
 def _insert_update(meeting_name: str, content: str, transcript_path: str,
@@ -99,7 +187,9 @@ def _run_audio_job(job_id: str, audio_path: Path, meeting_name: str, language: s
 
         output_path = folder / "client_update.md"
         from process import run_agent
-        run_agent(str(transcript_path), str(AGENT_FILE), str(output_path))
+        board_context = _build_board_context(session_start.strftime("%Y-%m-%d"))
+        run_agent(str(transcript_path), str(AGENT_FILE), str(output_path),
+                  board_context=board_context)
 
         content = output_path.read_text(encoding="utf-8")
         uid = _insert_update(
@@ -131,7 +221,9 @@ def _run_transcript_job(job_id: str, transcript_text: str, meeting_name: str):
 
         output_path = folder / "client_update.md"
         from process import run_agent
-        run_agent(str(transcript_path), str(AGENT_FILE), str(output_path))
+        board_context = _build_board_context(session_start.strftime("%Y-%m-%d"))
+        run_agent(str(transcript_path), str(AGENT_FILE), str(output_path),
+                  board_context=board_context)
 
         content = output_path.read_text(encoding="utf-8")
         uid = _insert_update(
@@ -234,7 +326,7 @@ def _run_reprocess_job(job_id: str, uid: str, transcript_text: str, hint: str):
 
 def _run_explore_job(job_id: str, query: str):
     try:
-        _jobs[job_id] = {"status": "processing", "step": "Searching transcripts…"}
+        _jobs[job_id] = {"status": "processing", "step": "Searching transcripts & boards…"}
 
         updates = load_data()
         parts = []
@@ -242,10 +334,22 @@ def _run_explore_job(job_id: str, query: str):
             tp = u.get("transcript_path", "")
             if tp and Path(tp).exists():
                 text = Path(tp).read_text(encoding="utf-8")
-                parts.append(f"=== Meeting: {u['meeting_name']} ({u['date']}) ===\n\n{text}")
+                parts.append(
+                    f"=== TRANSCRIPT — Meeting: {u['meeting_name']} ({u['date']}) ===\n\n{text}"
+                )
+
+        if BOARDS_DIR.exists():
+            for day_dir in sorted(BOARDS_DIR.iterdir()):
+                if not day_dir.is_dir():
+                    continue
+                ctx = _build_board_digest(day_dir.name)
+                if ctx:
+                    parts.append(
+                        f"=== PROJECT BOARD ({day_dir.name}) ===\n\n{ctx}"
+                    )
 
         if not parts:
-            _jobs[job_id] = {"status": "done", "answer": "No transcripts available to search."}
+            _jobs[job_id] = {"status": "done", "answer": "No transcripts or boards available to search."}
             return
 
         import tempfile
@@ -254,7 +358,7 @@ def _run_explore_job(job_id: str, query: str):
 
         tmp_output = Path(tempfile.mktemp(suffix=".md"))
         from process import run_agent
-        run_agent(str(tmp_input), str(EXPLORE_AGENT_FILE), str(tmp_output))
+        run_agent(str(tmp_input), str(EXPLORE_AGENT_FILE), str(tmp_output), model="haiku")
         tmp_input.unlink(missing_ok=True)
 
         answer = tmp_output.read_text(encoding="utf-8") if tmp_output.exists() else "No answer found."
@@ -283,6 +387,44 @@ def root():
 @app.get("/update.html")
 def update_page():
     return send_from_directory(Path(__file__).parent, "update.html")
+
+
+@app.get("/board.html")
+def board_page():
+    return send_from_directory(Path(__file__).parent, "board.html")
+
+
+@app.get("/api/boards")
+def list_boards():
+    boards = []
+    if BOARDS_DIR.exists():
+        for day_dir in BOARDS_DIR.iterdir():
+            if not (day_dir.is_dir() and _DATE_RE.match(day_dir.name)):
+                continue
+            facts_file = day_dir / "facts.json"
+            if not facts_file.exists():
+                continue
+            entry = {"date": day_dir.name, "has_brief": (day_dir / "brief.json").exists()}
+            try:
+                facts = json.loads(facts_file.read_text(encoding="utf-8"))
+                entry["board"] = facts.get("board")
+                entry["pct"] = (facts.get("totals") or {}).get("pct")
+                entry["delivered_count"] = facts.get("delivered_count")
+            except (json.JSONDecodeError, OSError):
+                pass
+            boards.append(entry)
+    boards.sort(key=lambda b: b["date"], reverse=True)
+    return jsonify(boards)
+
+
+@app.get("/api/board/<date>")
+def get_board(date):
+    board = find_board(date)
+    if not board:
+        return jsonify({"error": "Not found"}), 404
+    facts = json.loads(board["facts"].read_text(encoding="utf-8"))
+    brief = json.loads(board["brief"].read_text(encoding="utf-8")) if board["brief"] else None
+    return jsonify({"date": date, "facts": facts, "brief": brief})
 
 
 @app.get("/api/transcript/<uid>")

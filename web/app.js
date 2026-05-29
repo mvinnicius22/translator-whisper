@@ -13,11 +13,30 @@ document.addEventListener("keydown", (e) => {
   if (e.key !== "Escape") return;
   const open = document.querySelector(".modal-overlay.open");
   if (open) open.classList.remove("open");
+  const dd = document.getElementById("import-dropdown");
+  if (dd) dd.classList.remove("open");
 });
 
 function handleOverlayClick(e, name) {
   if (e.target === e.currentTarget) closeModal(name);
 }
+
+window.toggleImportMenu = function (e) {
+  e.stopPropagation();
+  const dd = document.getElementById("import-dropdown");
+  if (dd) dd.classList.toggle("open");
+};
+
+window.openImport = function (kind) {
+  const dd = document.getElementById("import-dropdown");
+  if (dd) dd.classList.remove("open");
+  openModal(kind);
+};
+
+document.addEventListener("click", () => {
+  const dd = document.getElementById("import-dropdown");
+  if (dd) dd.classList.remove("open");
+});
 
 // ── Audio import ──────────────────────────────────────────────────────────────
 
@@ -154,6 +173,7 @@ function updateSelectionBar() {
 
 // ── Filters ───────────────────────────────────────────────────────────────────
 
+let _filterSource = "all";   // all | meetings | board
 let _filterOwner  = "me";
 let _filterStatus = "pending";
 
@@ -161,54 +181,100 @@ window.setOwner = function (val) {
   _filterOwner = val;
   document.getElementById("tab-me").classList.toggle("active", val === "me");
   document.getElementById("tab-team").classList.toggle("active", val === "team");
-  renderList(_allUpdates);
+  renderList();
 };
 
 window.setStatus = function (val) {
   _filterStatus = val;
   document.getElementById("tab-pending").classList.toggle("active", val === "pending");
   document.getElementById("tab-archived").classList.toggle("active", val === "archived");
-  renderList(_allUpdates);
+  renderList();
+};
+
+window.setSource = function (val) {
+  _filterSource = val;
+  ["all", "meetings", "board"].forEach((s) =>
+    document.getElementById("tab-src-" + s).classList.toggle("active", s === val)
+  );
+  const showOwnerStatus = val !== "board";
+  const ownerBar  = document.getElementById("owner-bar");
+  const statusBar = document.getElementById("status-bar");
+  if (ownerBar)  ownerBar.style.display  = showOwnerStatus ? "" : "none";
+  if (statusBar) statusBar.style.display = showOwnerStatus ? "" : "none";
+  renderList();
 };
 
 // ── Index page ────────────────────────────────────────────────────────────────
 
-let _allUpdates = [];
+let _feed = [];
 
 if (document.getElementById("updates-list")) {
-  loadData().then((updates) => {
-    _allUpdates = updates;
-    renderList(updates);
+  loadFeed();
+}
+
+function normalizeFeed(updates, boards) {
+  const meetings = (updates || []).map((u) => ({
+    _type: "meeting",
+    id: u.id,
+    subject: parseSubject(u.content) || u.meeting_name || "Update",
+    meeting_name: u.meeting_name || "Untitled",
+    date: u.date,
+    content: u.content || "",
+    status: u.status || "pending",
+    owner: u.owner || "me",
+  }));
+  const boardItems = (boards || []).map((b) => ({
+    _type: "board",
+    date: b.date,
+    board: b.board || "Project Board",
+    pct: b.pct,
+    delivered_count: b.delivered_count,
+  }));
+  return [...meetings, ...boardItems].sort((a, b) =>
+    a.date < b.date ? 1 : a.date > b.date ? -1 : 0
+  );
+}
+
+function loadFeed() {
+  Promise.all([
+    fetch("/api/data").then((r) => r.json()),
+    fetch("/api/boards").then((r) => r.json()).catch(() => []),
+  ]).then(([updates, boards]) => {
+    _feed = normalizeFeed(updates, boards);
+    renderList();
   });
 }
 
-function renderList(updates) {
+function renderList() {
   const list = document.getElementById("updates-list");
   if (!list) return;
 
-  const filtered = updates.filter((u) => {
+  const items = _feed.filter((it) => {
+    if (it._type === "board") {
+      return _filterSource === "all" || _filterSource === "board";
+    }
+    if (_filterSource === "board") return false;
     const ownerOk = _filterOwner === "me"
-      ? (u.owner === "me" || !u.owner)
-      : u.owner === "team";
+      ? (it.owner === "me" || !it.owner)
+      : it.owner === "team";
     const statusOk = _filterStatus === "pending"
-      ? u.status === "pending"
-      : u.status !== "pending";
+      ? it.status === "pending"
+      : it.status !== "pending";
     return ownerOk && statusOk;
   });
 
-  if (filtered.length === 0) {
+  if (items.length === 0) {
     list.innerHTML = '<p class="empty-state">No updates here.</p>';
     return;
   }
 
-  if (_filterStatus === "pending") {
-    list.innerHTML = filtered.map(pendingCardHTML).join("");
-  } else {
-    list.innerHTML = filtered.map(archivedCardHTML).join("");
-  }
+  list.innerHTML = items.map((it) => {
+    if (it._type === "board") return boardFeedCardHTML(it);
+    return it.status === "pending" ? meetingCardHTML(it) : archivedCardHTML(it);
+  }).join("");
 }
 
-function pendingCardHTML(u) {
+function meetingCardHTML(u) {
   return `
     <div class="update-card update-card-link" id="card-${esc(u.id)}"
          onclick="location.href='/update.html?id=${esc(u.id)}'">
@@ -217,8 +283,9 @@ function pendingCardHTML(u) {
         <span class="card-checkmark"></span>
       </label>
       <div class="update-card-body">
-        <p class="update-title">${esc(u.meeting_name || "Untitled")}</p>
-        <p class="update-date">${esc(u.date)}</p>
+        <span class="badge badge-meeting">Meeting</span>
+        <p class="update-title">${esc(u.subject)}</p>
+        <p class="update-date">${esc(u.meeting_name)} · ${esc(u.date)}</p>
         <p class="update-preview">${esc(u.content.slice(0, 220))}${u.content.length > 220 ? "…" : ""}</p>
       </div>
       <div class="card-actions" onclick="event.stopPropagation()">
@@ -230,12 +297,31 @@ function pendingCardHTML(u) {
     </div>`;
 }
 
+function boardFeedCardHTML(b) {
+  const meta = [];
+  if (b.pct != null) meta.push(`${b.pct}% complete`);
+  if (b.delivered_count != null) meta.push(`${b.delivered_count} shipped`);
+  const sub = esc(b.board) + (meta.length ? " · " + esc(meta.join(" · ")) : "");
+  return `
+    <div class="update-card update-card-link"
+         onclick="location.href='/board.html?date=${esc(b.date)}'">
+      <div class="update-card-body">
+        <span class="badge badge-board">Board</span>
+        <p class="update-title">${esc(formatLongDate(b.date))}</p>
+        <p class="update-date">${sub}</p>
+      </div>
+      <div class="card-actions">
+        <svg class="card-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9,18 15,12 9,6"/></svg>
+      </div>
+    </div>`;
+}
+
 function archivedCardHTML(u) {
   return `
     <div class="archive-card" id="card-${esc(u.id)}">
       <div>
-        <p class="update-title">${esc(u.meeting_name || "Untitled")}</p>
-        <p class="update-date">${esc(u.date)}</p>
+        <p class="update-title"><span class="badge badge-meeting">Meeting</span> ${esc(u.subject)}</p>
+        <p class="update-date">${esc(u.meeting_name)} · ${esc(u.date)}</p>
       </div>
       <div class="archive-card-right">
         ${u.status === "sent"
@@ -254,8 +340,8 @@ window.deleteUpdate = function (id) {
   fetch("/api/delete/" + id, { method: "POST" })
     .then((r) => r.json())
     .then(() => {
-      _allUpdates = _allUpdates.filter((u) => u.id !== id);
-      renderList(_allUpdates);
+      _feed = _feed.filter((it) => !(it._type === "meeting" && it.id === id));
+      renderList();
     });
 };
 
@@ -462,7 +548,7 @@ window.submitExplore = function () {
 
   const results = document.getElementById("explorer-results");
   results.style.display = "";
-  results.innerHTML = '<div class="explorer-loading"><div class="spinner" style="width:20px;height:20px;border-width:2px"></div><span>Searching transcripts…</span></div>';
+  results.innerHTML = '<div class="explorer-loading"><div class="spinner" style="width:20px;height:20px;border-width:2px"></div><span>Searching transcripts &amp; boards…</span></div>';
 
   fetch("/api/explore", {
     method: "POST",
@@ -484,13 +570,174 @@ function pollExploreJob(jobId, resultsEl) {
       .then((job) => {
         if (job.status === "done") {
           clearInterval(interval);
-          resultsEl.textContent = job.answer || "No answer found.";
+          resultsEl.innerHTML = renderExploreMd(job.answer || "No answer found.");
         } else if (job.status === "error") {
           clearInterval(interval);
           resultsEl.textContent = "Error: " + job.message;
         }
       });
-  }, 3000);
+  }, 1000);
+}
+
+// ── Board page ────────────────────────────────────────────────────────────────
+
+if (document.getElementById("board-list")) {
+  const boardDate = new URLSearchParams(location.search).get("date");
+  if (boardDate) {
+    loadBoardDetail(boardDate);
+  } else {
+    loadBoardList();
+  }
+}
+
+function loadBoardList() {
+  const list = document.getElementById("board-list");
+  fetch("/api/boards")
+    .then((r) => r.json())
+    .then((boards) => {
+      if (!Array.isArray(boards) || boards.length === 0) {
+        list.innerHTML = '<p class="empty-state">No boards available yet.</p>';
+        return;
+      }
+      list.innerHTML = boards.map(boardCardHTML).join("");
+    })
+    .catch(() => { list.innerHTML = '<p class="empty-state">Failed to load boards.</p>'; });
+}
+
+function boardCardHTML(b) {
+  const meta = [];
+  if (b.pct != null) meta.push(`${esc(b.pct)}% complete`);
+  if (b.delivered_count != null) meta.push(`${esc(b.delivered_count)} shipped`);
+  return `
+    <div class="update-card update-card-link"
+         onclick="location.href='/board.html?date=${esc(b.date)}'">
+      <div class="update-card-body">
+        <p class="update-title">${esc(b.board || "Project Board")}</p>
+        <p class="update-date">${esc(b.date)}${meta.length ? " · " + meta.join(" · ") : ""}</p>
+      </div>
+      <div class="card-actions">
+        <svg class="card-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9,18 15,12 9,6"/></svg>
+      </div>
+    </div>`;
+}
+
+function loadBoardDetail(date) {
+  document.getElementById("board-list").style.display = "none";
+  document.getElementById("board-content").style.display = "";
+  document.getElementById("btn-back").href = "/board.html";
+  document.getElementById("bc-date-sep").style.display = "";
+  const bcDate = document.getElementById("breadcrumb-date");
+  bcDate.style.display = "";
+  bcDate.textContent = date;
+
+  fetch("/api/board/" + date)
+    .then((r) => r.json())
+    .then((data) => {
+      if (data.error) {
+        document.getElementById("board-facts").innerHTML =
+          '<p class="empty-state">Board not found.</p>';
+        return;
+      }
+      const f = data.facts || {};
+      document.getElementById("board-title").textContent = f.board || "Project Board";
+      document.getElementById("board-subtitle").textContent =
+        `Snapshot for ${esc(date)}`;
+      document.title = (f.board || "Board") + " — cloud++";
+      document.getElementById("board-facts").innerHTML = renderFacts(f);
+      document.getElementById("board-brief").innerHTML = renderBrief(data.brief);
+    })
+    .catch(() => {
+      document.getElementById("board-facts").innerHTML =
+        '<p class="empty-state">Failed to load board.</p>';
+    });
+}
+
+function renderFacts(f) {
+  const t = f.totals || {};
+  const stats = [
+    t.pct != null ? statHTML(t.pct + "%", "complete") : "",
+    (t.done_points != null && t.points != null) ? statHTML(t.done_points + " / " + t.points, "points done") : "",
+    (t.done_tickets != null && t.tickets != null) ? statHTML(t.done_tickets + " / " + t.tickets, "tickets done") : "",
+    f.delivered_count != null ? statHTML(f.delivered_count, "delivered") : "",
+  ].join("");
+
+  let html = "";
+  const title = f.url
+    ? `<a href="${esc(f.url)}" target="_blank" rel="noopener">${esc(f.board || "Board")}</a>`
+    : esc(f.board || "Board");
+  html += `<div class="board-doc-head"><p class="board-doc-title">${title}</p>` +
+          `<p class="board-doc-sub">${esc(f.date || "")}${f.period ? " · " + esc(f.period) : ""}</p></div>`;
+
+  if (stats) html += `<div class="board-stat-grid">${stats}</div>`;
+
+  if (f.by_status && Object.keys(f.by_status).length) {
+    const rows = Object.entries(f.by_status)
+      .map(([k, v]) => `<div class="board-row"><span>${esc(k)}</span><span class="board-row-val">${esc(v.n)} · ${esc(v.pts)} pts</span></div>`)
+      .join("");
+    html += boardSection("By status", rows);
+  }
+
+  if (Array.isArray(f.completed) && f.completed.length) {
+    const rows = f.completed.map((c) =>
+      `<div class="board-row"><span><span class="board-chip">${esc(c.id)}</span> ${esc(c.title)}</span>` +
+      `<span class="board-row-val">${c.story_points != null ? esc(c.story_points) + " pts" : ""}${c.assignee ? " · " + esc(c.assignee) : ""}</span></div>`
+    ).join("");
+    html += boardSection("Completed (" + f.completed.length + ")", rows);
+  }
+
+  if (Array.isArray(f.cards) && f.cards.length) {
+    const rows = f.cards.map((c) => {
+      const blocked = (Array.isArray(c.blocked_by) && c.blocked_by.length)
+        ? ` <span class="board-flag">blocked</span>` : "";
+      return `<div class="board-row"><span><span class="board-chip">${esc(c.id)}</span> ${esc(c.title)}${blocked}</span>` +
+        `<span class="board-row-val">${esc(c.status || "")}${c.assignee ? " · " + esc(c.assignee) : ""}</span></div>`;
+    }).join("");
+    html += boardSection("All cards (" + f.cards.length + ")", rows);
+  }
+
+  return html;
+}
+
+function renderBrief(b) {
+  if (!b) return '<p class="empty-state">No brief for this day.</p>';
+  let html = "";
+
+  if (b.client_message) {
+    html += `<div class="board-callout">${esc(b.client_message)}</div>`;
+  }
+
+  const p = b.progress || {};
+  const stats = [
+    p.scope_complete_pct != null ? statHTML(p.scope_complete_pct + "%", "scope complete") : "",
+    p.delivered_count != null ? statHTML(p.delivered_count, "delivered") : "",
+    p.signal ? statHTML(esc(p.signal), "signal") : "",
+  ].join("");
+  if (stats) html += `<div class="board-stat-grid">${stats}</div>`;
+
+  if (Array.isArray(b.shipped) && b.shipped.length) {
+    const rows = b.shipped.map((s) =>
+      `<div class="board-row"><span><span class="board-chip">${esc(s.id)}</span> ${esc(s.title)}</span></div>`
+    ).join("");
+    html += boardSection("Shipped (" + b.shipped.length + ")", rows);
+  }
+
+  if (Array.isArray(b.attention) && b.attention.length) {
+    const items = b.attention.map((a) =>
+      `<div class="board-attention"><p class="board-attention-title">${esc(a.title)}</p>` +
+      `<p class="board-attention-detail">${esc(a.detail || "")}</p></div>`
+    ).join("");
+    html += boardSection("Needs attention (" + b.attention.length + ")", items);
+  }
+
+  return html;
+}
+
+function statHTML(value, label) {
+  return `<div class="board-stat"><span class="board-stat-value">${value}</span><span class="board-stat-label">${esc(label)}</span></div>`;
+}
+
+function boardSection(title, inner) {
+  return `<div class="board-section"><p class="board-section-title">${esc(title)}</p>${inner}</div>`;
 }
 
 // ── Shared helpers ────────────────────────────────────────────────────────────
@@ -514,10 +761,57 @@ function showToast(msg, color) {
   t.className = "toast toast-" + color;
 }
 
+function parseSubject(content) {
+  const m = (content || "").match(/^\s*Subject:\s*(.+)$/m);
+  return (m ? m[1] : "").trim();
+}
+
+function formatLongDate(iso) {
+  const MONTHS = ["January", "February", "March", "April", "May", "June",
+                  "July", "August", "September", "October", "November", "December"];
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso || "");
+  if (!m) return iso || "";
+  const month = MONTHS[parseInt(m[2], 10) - 1] || "";
+  return `${month} ${parseInt(m[3], 10)}, ${m[1]}`;
+}
+
 function esc(str) {
   return String(str)
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;");
+}
+
+// Minimal markdown → HTML for explorer answers (bold, links, bullet lists).
+// Escapes first, so inline HTML in the answer is inert.
+function renderExploreMd(src) {
+  const inline = (s) =>
+    esc(s)
+      .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
+      .replace(/\bhttps?:\/\/[^\s<)]+/g, (u) => `<a href="${u}" target="_blank" rel="noopener">${u}</a>`);
+
+  const blocks = [];
+  let list = null;       // array of <li>
+  let listTag = null;    // "ul" | "ol"
+  const flush = () => {
+    if (list) { blocks.push(`<${listTag}>${list.join("")}</${listTag}>`); list = null; listTag = null; }
+  };
+  for (const raw of String(src).split("\n")) {
+    const line = raw.replace(/\s+$/, "");
+    const ul = line.match(/^\s*[-*]\s+(.*)$/);
+    const ol = line.match(/^\s*\d+\.\s+(.*)$/);
+    const m = ul || ol;
+    if (m) {
+      const tag = ul ? "ul" : "ol";
+      if (listTag && listTag !== tag) flush();
+      listTag = tag;
+      (list = list || []).push(`<li>${inline(m[1])}</li>`);
+      continue;
+    }
+    flush();
+    if (line.trim()) blocks.push(`<p>${inline(line)}</p>`);
+  }
+  flush();
+  return blocks.join("");
 }
