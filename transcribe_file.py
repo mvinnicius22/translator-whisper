@@ -346,6 +346,8 @@ def main():
     parser.add_argument("--num-speakers", type=int, default=None,
                         help="Exact number of speakers, if known (improves accuracy; "
                              "default: auto-detect)")
+    parser.add_argument("--output-folder", default="",
+                        help="Save transcript to this folder instead of ~/Documents/Meetings/...")
     args = parser.parse_args()
 
     if not Path(args.file).exists():
@@ -361,8 +363,10 @@ def main():
                 print("Run ./setup.sh and choose 'Add speaker diarization'.", file=sys.stderr)
                 sys.exit(1)
 
+    output_folder = Path(args.output_folder) if args.output_folder else None
     transcribe_file(args.file, args.model, args.lang, args.meeting_name,
-                    args.format, args.diarize, args.num_speakers)
+                    args.format, args.diarize, args.num_speakers,
+                    output_folder=output_folder)
 
 
 if __name__ == "__main__":
